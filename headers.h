@@ -237,7 +237,7 @@ struct dhcpv4_hdr
 #define DHCP_MAXMSGSIZE      0x39
 #define DHCP_RENEWTIME       0x3a
 #define DHCP_REBINDTIME      0x3b
-#define DHCP_CLASSSID        0x3c
+#define DHCP_CLASSID         0x3c
 #define DHCP_CLIENTID        0x3d
 #define DHCP_NISPLUSDOMAIN   0x40
 #define DHCP_NISPLUSSERVERS  0x41
@@ -304,6 +304,61 @@ struct dhcpv4_hdr
  * Minimum DHCP packet size
  */
 #define MINIMUM_PACKET_SIZE 300
+
+//Defined in dhtest.c
+extern int sock_packet;
+extern struct sockaddr_ll ll;
+extern int iface;
+extern u_int16_t vlan;
+extern u_int8_t l3_tos;
+
+extern u_int16_t l2_hdr_size;
+extern u_int16_t l3_hdr_size;
+extern u_int16_t l4_hdr_size;
+extern u_int16_t dhcp_hdr_size;
+extern u_int16_t fqdn_n;
+extern u_int16_t fqdn_s;
+
+extern u_int32_t dhopt_size;
+extern u_int32_t dhcp_xid;
+extern int bcast_flag;
+extern int timeout;
+extern u_int8_t padding_flag;
+extern const char *vci_buff;
+extern const char *hostname_buff;
+extern const char *fqdn_buff;
+extern u_int32_t option51_lease_time;
+extern u_int32_t port;
+extern u_int8_t unicast_flag;
+extern u_int8_t nagios_flag;
+extern char *giaddr;
+extern char *server_addr;
+
+extern struct ethernet_hdr *eth_hg;
+extern struct vlan_hdr *vlan_hg; 
+extern struct iphdr *iph_g;
+extern struct udphdr *uh_g;
+extern struct dhcpv4_hdr *dhcph_g;
+extern u_int8_t *dhopt_pointer_g;
+
+extern u_char dhmac[ETHER_ADDR_LEN];
+extern u_char dmac[ETHER_ADDR_LEN];
+
+extern char dhmac_fname[20];
+extern char iface_name[30];
+extern char ip_str[128];
+extern u_int32_t server_id, option50_ip;
+extern u_int8_t dhcp_release_flag;
+
+extern u_int32_t unicast_ip_address;
+extern u_int32_t ip_address;
+extern u_char ip_listen_flag;
+extern u_char arp_icmp_packet[1514];
+extern u_char arp_icmp_reply[1514];
+extern u_int16_t icmp_len;
+extern struct timeval tval_listen;
+extern u_int32_t listen_timeout;
+
 
 #endif  /* __HEADERS_H */
 

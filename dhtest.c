@@ -4,16 +4,18 @@
  * Author - Saravanakumar.G E-mail: saravana815@gmail.com
  */
 
-#include<stdio.h>
-#include<string.h>
-#include<sys/types.h>
-#include<unistd.h>
-#include<sys/socket.h>
-#include<net/if.h>
-#include<linux/if_packet.h>
-#include<getopt.h>
-#include<time.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <net/if.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <linux/if_packet.h>
+#include <getopt.h>
+#include <time.h>
+#include <stdlib.h>
 #include "headers.h"
 
 int sock_packet, iface = 2;	/* Socket descripter & transmit interface index */
@@ -34,7 +36,6 @@ u_char dhcp_packet_request[1518] = { 0 };
 u_char dhcp_packet_ack[1518] = { 0 };
 u_char dhcp_packet_release[1518] = { 0 };
 
-u_char dhopt_buff[500] = { 0 };
 u_int32_t dhopt_size = { 0 };
 u_char dhmac[ETHER_ADDR_LEN] = { 0 };
 u_char dmac[ETHER_ADDR_LEN];
@@ -45,12 +46,12 @@ char ip_str[128];
 u_int8_t dhmac_flag = 0;
 u_int32_t server_id = { 0 }, option50_ip = { 0 };
 u_int32_t dhcp_xid = 0;  
-u_int16_t bcast_flag = 0; /* DHCP broadcast flag */ 
-u_int8_t vci_buff[256] = { 0 }; /* VCI buffer*/
+int bcast_flag = 0; /* DHCP broadcast flag */ 
+const char *vci_buff;
 u_int16_t vci_flag = 0;
-u_int8_t hostname_buff[256] = { 0 }; /* Hostname buffer*/
+const char *hostname_buff;
 u_int16_t hostname_flag = 0;
-u_int8_t fqdn_buff[256] = { 0 }; /* FQDN buffer*/
+const char *fqdn_buff;
 u_int16_t fqdn_flag = 0;
 u_int16_t fqdn_n = 0;
 u_int16_t fqdn_s = 0;
@@ -58,8 +59,8 @@ u_int32_t option51_lease_time = 0;
 u_int32_t port = 67;
 u_int8_t unicast_flag = 0;
 u_int8_t nagios_flag = 0;
-u_char *giaddr = "0.0.0.0";
-u_char *server_addr = "255.255.255.255";
+char *giaddr = "0.0.0.0";
+char *server_addr = "255.255.255.255";
 
 /* Pointers for all layer data structures */
 struct ethernet_hdr *eth_hg = { 0 };
@@ -73,7 +74,7 @@ u_int8_t *dhopt_pointer_g = { 0 };
 u_int8_t verbose = 0;
 u_int8_t dhcp_release_flag = 0;
 u_int8_t padding_flag = 0;
-u_int16_t timeout = 0;
+int timeout = 0;
 time_t time_now, time_last;
 
 /* Used for ip listening functionality */
@@ -243,30 +244,30 @@ int main(int argc, char *argv[])
 				break;
 
 			case 'o':
-				if(strlen(optarg) > 256) {
+				if(strlen(optarg) >= 256) {
 					fprintf(stdout, "VCI string size should be less than 256\n");
 					exit(2);
 				}
 				vci_flag = 1;
-				memcpy(vci_buff, optarg, sizeof(vci_buff));
+				vci_buff = optarg;
 				break;
 
 			case 'h':
-				if(strlen(optarg) > 256) {
+				if(strlen(optarg) >= 256) {
 					fprintf(stdout, "Hostname string size should be less than 256\n");
 					exit(2);
 				}
 				hostname_flag = 1;
-				memcpy(hostname_buff, optarg, sizeof(hostname_buff));
+				hostname_buff = optarg;
 				break;
 
 			case 'd':
-				if(strlen(optarg) > 256) {
-					fprintf(stdout, "FQDN domain name string size should be less than 256\n");
+				if(strlen(optarg) >= 253) {
+					fprintf(stdout, "FQDN domain name string size should be less than 253\n");
 					exit(2);
 				}
 				fqdn_flag = 1;
-				memcpy(fqdn_buff, optarg, sizeof(fqdn_buff));
+				fqdn_buff = optarg;
 				break;
 
 			case 'n':

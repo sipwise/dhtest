@@ -1,7 +1,7 @@
 # Makefile to generate dhtest
 
 CC=gcc
-# CFLAGS=-Wall
+CFLAGS=-Wall -O3 -g -fno-strict-aliasing
 
 dhtest: dhtest.o functions.o 
 	$(CC) dhtest.o functions.o -o dhtest
