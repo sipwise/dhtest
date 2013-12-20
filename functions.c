@@ -676,7 +676,7 @@ int build_dhpacket(int pkt_type)
 		else
 			dhpointer->dhcp_cip = 0;
 		dhpointer->dhcp_yip = 0;
-		dhpointer->dhcp_sip = 0;
+		dhpointer->dhcp_sip = dhcph_g->dhcp_sip;
 		dhpointer->dhcp_gip = inet_addr(giaddr);
 		memcpy(dhpointer->dhcp_chaddr, dhmac, ETHER_ADDR_LEN);
 		/*dhpointer->dhcp_sname 
