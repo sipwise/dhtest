@@ -51,13 +51,7 @@ u_int8_t nagios_flag = 0;
 char *giaddr = "0.0.0.0";
 char *server_addr = "255.255.255.255";
 
-/* Pointers for all layer data structures */
-struct ethernet_hdr *eth_hg = { 0 };
-struct vlan_hdr *vlan_hg = { 0 };
-struct iphdr *iph_g = { 0 };
-struct udphdr *uh_g = { 0 };
 struct dhcpv4_hdr *dhcph_g = { 0 };
-
 
 u_int8_t *dhopt_pointer_g = { 0 };
 u_int8_t verbose = 0;
@@ -66,18 +60,11 @@ u_int8_t padding_flag = 0;
 int timeout = 0;
 time_t time_now, time_last;
 
-/* Used for ip listening functionality */
-struct arp_hdr *arp_hg = { 0 };
-struct icmp_hdr *icmp_hg = { 0 };
-
 u_int32_t unicast_ip_address = 0;
 u_int32_t ip_address;
 u_char ip_listen_flag = 0;
 struct timeval tval_listen = { 3600, 0 };
 u_int32_t listen_timeout = 3600;
-u_char arp_icmp_packet[1514] = { 0 };
-u_char arp_icmp_reply[1514] = { 0 };
-u_int16_t icmp_len = 0;
 
 /* Help routine for the command line interface */
 void print_help(char *cmd)

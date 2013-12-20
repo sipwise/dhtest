@@ -336,10 +336,6 @@ extern u_int8_t nagios_flag;
 extern char *giaddr;
 extern char *server_addr;
 
-extern struct ethernet_hdr *eth_hg;
-extern struct vlan_hdr *vlan_hg; 
-extern struct iphdr *iph_g;
-extern struct udphdr *uh_g;
 extern struct dhcpv4_hdr *dhcph_g;
 extern u_int8_t *dhopt_pointer_g;
 
@@ -355,9 +351,6 @@ extern u_int8_t dhcp_release_flag;
 extern u_int32_t unicast_ip_address;
 extern u_int32_t ip_address;
 extern u_char ip_listen_flag;
-extern u_char arp_icmp_packet[1514];
-extern u_char arp_icmp_reply[1514];
-extern u_int16_t icmp_len;
 extern struct timeval tval_listen;
 extern u_int32_t listen_timeout;
 

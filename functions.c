@@ -17,6 +17,11 @@
 
 
 static unsigned char dhopt_buff[500];
+/* Pointers for all layer data structures */
+struct ethernet_hdr *eth_hg = { 0 };
+struct vlan_hdr *vlan_hg = { 0 };
+struct iphdr *iph_g = { 0 };
+struct udphdr *uh_g = { 0 };
 static struct arp_hdr *arp_hg;
 static struct icmp_hdr *icmp_hg;
 
@@ -30,6 +35,9 @@ static u_int16_t dhcp_hdr_size = sizeof(struct dhcpv4_hdr);
 static u_int32_t dhopt_size = { 0 };
 static struct sockaddr_ll ll = { 0 };	/* Socket address structure */
 static int sock_packet;
+static u_char arp_icmp_packet[1514] = { 0 };
+static u_char arp_icmp_reply[1514] = { 0 };
+static u_int16_t icmp_len = 0;
 
 
 /*
