@@ -26,13 +26,10 @@ static struct arp_hdr *arp_hg;
 static struct icmp_hdr *icmp_hg;
 
 /* DHCP packet, option buffer and size of option buffer */
-static unsigned char dhcp_packet_disc[1518] = { 0 };
-static unsigned char dhcp_packet_offer[1518] = { 0 };
-static unsigned char dhcp_packet_request[1518] = { 0 };
-static unsigned char dhcp_packet_ack[1518] = { 0 };
-static unsigned char dhcp_packet_release[1518] = { 0 };
+static unsigned char dhcp_packet_send[1518];
+static unsigned char dhcp_packet_recv[1518];
 static u_int16_t dhcp_hdr_size = sizeof(struct dhcpv4_hdr);
-static u_int32_t dhopt_size = { 0 };
+static u_int32_t dhopt_size;
 static struct sockaddr_ll ll = { 0 };	/* Socket address structure */
 static int sock_packet;
 static u_char arp_icmp_packet[1514] = { 0 };
@@ -139,44 +136,39 @@ u_int32_t get_interface_address()
 int send_packet(int pkt_type)
 {
 	int ret;
-	if(pkt_type == DHCP_MSGDISCOVER) {
-		ret = sendto(sock_packet,\
-				dhcp_packet_disc,\
-				(l2_hdr_size + l3_hdr_size + l4_hdr_size + dhcp_hdr_size + dhopt_size),\
-				0,\
-				(struct sockaddr *) &ll,\
-				sizeof(ll));
-	} else if(pkt_type == DHCP_MSGREQUEST) {
-		ret = sendto(sock_packet,\
-				dhcp_packet_request,\
-				(l2_hdr_size + l3_hdr_size + l4_hdr_size + dhcp_hdr_size + dhopt_size),\
-				0,\
-				(struct sockaddr *) &ll,\
-				sizeof(ll));
-	} else if(pkt_type == DHCP_MSGRELEASE) {
-		ret = sendto(sock_packet,\
-				dhcp_packet_release,\
-				(l2_hdr_size + l3_hdr_size + l4_hdr_size + dhcp_hdr_size + dhopt_size),\
-				0,\
-				(struct sockaddr *) &ll,\
-				sizeof(ll));
-	} else if(pkt_type == ARP_SEND) {
-		ret = sendto(sock_packet,\
-				arp_icmp_reply,\
-				60,\
-				0,\
-				(struct sockaddr *) &ll,\
-				sizeof(ll));
-	} else if(pkt_type == ICMP_SEND) {
-		ret = sendto(sock_packet,\
-				arp_icmp_reply,\
-				(l2_hdr_size + l3_hdr_size + ICMP_H + icmp_len),\
-				0,\
-				(struct sockaddr *) &ll,\
-				sizeof(ll));
+	switch (pkt_type) {
+		case DHCP_MSGDISCOVER:
+		case DHCP_MSGREQUEST:
+		case DHCP_MSGRELEASE:
+			ret = sendto(sock_packet,\
+					dhcp_packet_send,\
+					(l2_hdr_size + l3_hdr_size + l4_hdr_size + dhcp_hdr_size + dhopt_size),\
+					0,\
+					(struct sockaddr *) &ll,\
+					sizeof(ll));
+			break;
+
+		case ARP_SEND:
+			ret = sendto(sock_packet,\
+					arp_icmp_reply,\
+					60,\
+					0,\
+					(struct sockaddr *) &ll,\
+					sizeof(ll));
+			break;
+
+		case ICMP_SEND:
+			ret = sendto(sock_packet,\
+					arp_icmp_reply,\
+					(l2_hdr_size + l3_hdr_size + ICMP_H + icmp_len),\
+					0,\
+					(struct sockaddr *) &ll,\
+					sizeof(ll));
+			break;
+
+		default:
+			abort();
 	}
-	else
-		abort();
 
 	if(ret < 0) {
 		if (nagios_flag)
@@ -233,11 +225,10 @@ int recv_packet(int pkt_type)
 				return DHCP_DISC_RESEND;
 				break;
 			} else if ( retval > 0 && FD_ISSET(sock_packet, &read_fd)) {
-				bzero(dhcp_packet_offer, sizeof(dhcp_packet_offer));
 				sock_len = sizeof(ll);
 				ret = recvfrom(sock_packet,\
-						dhcp_packet_offer,\
-						sizeof(dhcp_packet_offer),\
+						dhcp_packet_recv,\
+						sizeof(dhcp_packet_recv),\
 						0,\
 						(struct sockaddr *)&ll,
 						&sock_len);
@@ -261,11 +252,10 @@ int recv_packet(int pkt_type)
 				return DHCP_REQ_RESEND;
 				break;
 			} else if ( retval > 0 && FD_ISSET(sock_packet, &read_fd)){
-				bzero(dhcp_packet_ack, sizeof(dhcp_packet_ack));
 				sock_len = sizeof(ll);
 				ret = recvfrom(sock_packet,\
-						dhcp_packet_ack,\
-						sizeof(dhcp_packet_ack),\
+						dhcp_packet_recv,\
+						sizeof(dhcp_packet_recv),\
 						0,\
 						(struct sockaddr *)&ll,
 						&sock_len);
@@ -291,7 +281,6 @@ int recv_packet(int pkt_type)
 				return LISTEN_TIMOUET;
 				break;
 			} else if ( retval > 0 && FD_ISSET(sock_packet, &read_fd)) {
-				bzero(arp_icmp_packet, sizeof(arp_icmp_packet));
 				sock_len = sizeof(ll);
 				ret = recvfrom(sock_packet,\
 						arp_icmp_packet,\
@@ -556,219 +545,104 @@ int build_dhpacket(int pkt_type)
 		u_char dmac_tmp[ETHER_ADDR_LEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 		memcpy(dmac, dmac_tmp, ETHER_ADDR_LEN);
 	}
-	if(pkt_type == DHCP_MSGDISCOVER) {
-		if(vlan == 0) {
-			struct ethernet_hdr *ethhdr = (struct ethernet_hdr *)dhcp_packet_disc;
-			memcpy(ethhdr->ether_dhost, dmac, ETHER_ADDR_LEN);
-			memcpy(ethhdr->ether_shost, dhmac, ETHER_ADDR_LEN);
-			ethhdr->ether_type = htons(ETHERTYPE_IP);
-		} else {
-			struct vlan_hdr *vhdr = (struct vlan_hdr *)dhcp_packet_disc;
-			memcpy(vhdr->vlan_dhost, dmac, ETHER_ADDR_LEN);
-			memcpy(vhdr->vlan_shost, dhmac, ETHER_ADDR_LEN);
-			vhdr->vlan_tpi = htons(ETHERTYPE_VLAN);
-			vhdr->vlan_priority_c_vid = htons(vlan);
-			vhdr->vlan_len = htons(ETHERTYPE_IP);
-		}
-		//print_buff(dhcp_packet_disc, sizeof(struct ethernet_hdr));
 
-		if (padding_flag && dhcp_packet_size < MINIMUM_PACKET_SIZE) {
-			memset(dhopt_buff + dhopt_size, 0, MINIMUM_PACKET_SIZE - dhcp_packet_size);
-			dhopt_size += MINIMUM_PACKET_SIZE - dhcp_packet_size;
-		}
-
-		struct iphdr *iph = (struct iphdr *)(dhcp_packet_disc + l2_hdr_size);
-		iph->version = 4;
-		iph->ihl = 5;
-		iph->tos = l3_tos;
-		iph->tot_len = htons(l3_hdr_size +  l4_hdr_size + dhcp_hdr_size + dhopt_size);  
-		iph->id = 0;
-		iph->frag_off = 0;
-		iph->ttl = 64;
-		iph->protocol = 17;
-		iph->check = 0; // Filled later;
-		if (unicast_flag)
-			iph->saddr = unicast_ip_address;
-		else
-			iph->saddr = inet_addr("0.0.0.0");
-		iph->daddr = inet_addr(server_addr);
-		iph->check = ipchksum((u_int16_t *)(dhcp_packet_disc + l2_hdr_size), iph->ihl << 1);
-
-		struct udphdr *uh = (struct udphdr *) (dhcp_packet_disc + l2_hdr_size + l3_hdr_size);
-		uh->source = htons(port + 1);
-		uh->dest = htons(port);
-		u_int16_t l4_proto = 17;
-		u_int16_t l4_len = (l4_hdr_size + dhcp_hdr_size + dhopt_size);
-		uh->len = htons(l4_len);
-		uh->check = 0; /* UDP checksum will be done after dhcp header*/
-
-		struct dhcpv4_hdr *dhpointer = (struct dhcpv4_hdr *)(dhcp_packet_disc + l2_hdr_size + l3_hdr_size + l4_hdr_size);
-		dhpointer->dhcp_opcode = DHCP_REQUEST;
-		dhpointer->dhcp_htype = ARPHRD_ETHER;
-		dhpointer->dhcp_hlen = ETHER_ADDR_LEN;
-		dhpointer->dhcp_hopcount = 0;
-		dhpointer->dhcp_xid = htonl(dhcp_xid);
-		dhpointer->dhcp_secs = 0;
-		dhpointer->dhcp_flags = bcast_flag;
-		if (unicast_flag)
-			dhpointer->dhcp_cip = unicast_ip_address;
-		else
-			dhpointer->dhcp_cip = 0;
-		dhpointer->dhcp_yip = 0;
-		dhpointer->dhcp_sip = 0;
-		dhpointer->dhcp_gip = inet_addr(giaddr);
-		memcpy(dhpointer->dhcp_chaddr, dhmac, ETHER_ADDR_LEN);
-		/*dhpointer->dhcp_sname 
-		  dhpointer->dhcp_file*/
-		dhpointer->dhcp_magic = htonl(DHCP_MAGIC);
-
-		/* DHCP option buffer is copied here to DHCP packet */
-		u_char *dhopt_pointer = (u_char *)(dhcp_packet_disc + l2_hdr_size + l3_hdr_size + l4_hdr_size + dhcp_hdr_size);
-		memcpy(dhopt_pointer, dhopt_buff, dhopt_size);    
-
-		/* UDP checksum is done here */
-		uh->check = l4_sum((u_int16_t *) (dhcp_packet_disc + l2_hdr_size + l3_hdr_size), ((dhcp_hdr_size + dhopt_size + l4_hdr_size) / 2), (u_int16_t *)&iph->saddr, (u_int16_t *)&iph->daddr, htons(l4_proto), htons(l4_len)); 
+	if(vlan == 0) {
+		struct ethernet_hdr *ethhdr = (struct ethernet_hdr *)dhcp_packet_send;
+		memcpy(ethhdr->ether_dhost, dmac, ETHER_ADDR_LEN);
+		memcpy(ethhdr->ether_shost, dhmac, ETHER_ADDR_LEN);
+		ethhdr->ether_type = htons(ETHERTYPE_IP);
+	} else {
+		struct vlan_hdr *vhdr = (struct vlan_hdr *)dhcp_packet_send;
+		memcpy(vhdr->vlan_dhost, dmac, ETHER_ADDR_LEN);
+		memcpy(vhdr->vlan_shost, dhmac, ETHER_ADDR_LEN);
+		vhdr->vlan_tpi = htons(ETHERTYPE_VLAN);
+		vhdr->vlan_priority_c_vid = htons(vlan);
+		vhdr->vlan_len = htons(ETHERTYPE_IP);
 	}
-	if(pkt_type == DHCP_MSGREQUEST) {
-		if(vlan == 0) {
-			struct ethernet_hdr *ethhdr = (struct ethernet_hdr *)dhcp_packet_request;
-			memcpy(ethhdr->ether_dhost, dmac, ETHER_ADDR_LEN);
-			memcpy(ethhdr->ether_shost, dhmac, ETHER_ADDR_LEN);
-			ethhdr->ether_type = htons(ETHERTYPE_IP);
-		} else {
-			struct vlan_hdr *vhdr = (struct vlan_hdr *)dhcp_packet_request;
-			memcpy(vhdr->vlan_dhost, dmac, ETHER_ADDR_LEN);
-			memcpy(vhdr->vlan_shost, dhmac, ETHER_ADDR_LEN);
-			vhdr->vlan_tpi = htons(ETHERTYPE_VLAN);
-			vhdr->vlan_priority_c_vid = htons(vlan);
-			vhdr->vlan_len = htons(ETHERTYPE_IP);
-		}
-		//print_buff(dhcp_packet_request, sizeof(struct ethernet_hdr));
+	//print_buff(dhcp_packet_disc, sizeof(struct ethernet_hdr));
 
-		if (padding_flag && dhcp_packet_size < MINIMUM_PACKET_SIZE) {
-			memset(dhopt_buff + dhopt_size, 0, MINIMUM_PACKET_SIZE - dhcp_packet_size);
-			dhopt_size += MINIMUM_PACKET_SIZE - dhcp_packet_size;
-		}
-
-		struct iphdr *iph = (struct iphdr *)(dhcp_packet_request + l2_hdr_size);
-		iph->version = 4;
-		iph->ihl = 5;
-		iph->tos = l3_tos;
-		iph->tot_len = htons(l3_hdr_size +  l4_hdr_size + dhcp_hdr_size + dhopt_size);  
-		iph->id = 0;
-		iph->frag_off = 0;
-		iph->ttl = 64;
-		iph->protocol = 17;
-		iph->check = 0; // Filled later;
-		if (unicast_flag)
-			iph->saddr = unicast_ip_address;
-		else
-			iph->saddr = inet_addr("0.0.0.0");
-		iph->daddr = inet_addr(server_addr);
-		iph->check = ipchksum((u_int16_t *)(dhcp_packet_request + l2_hdr_size), iph->ihl << 1);
-
-		struct udphdr *uh = (struct udphdr *) (dhcp_packet_request + l2_hdr_size + l3_hdr_size);
-		uh->source = htons(port + 1);
-		uh->dest = htons(port);
-		u_int16_t l4_proto = 17;
-		u_int16_t l4_len = (l4_hdr_size + dhcp_hdr_size + dhopt_size);
-		uh->len = htons(l4_len);
-		uh->check = 0; /* UDP checksum will be done after building dhcp header*/
-
-		struct dhcpv4_hdr *dhpointer = (struct dhcpv4_hdr *)(dhcp_packet_request + l2_hdr_size + l3_hdr_size + l4_hdr_size);
-		dhpointer->dhcp_opcode = DHCP_REQUEST;
-		dhpointer->dhcp_htype = ARPHRD_ETHER;
-		dhpointer->dhcp_hlen = ETHER_ADDR_LEN;
-		dhpointer->dhcp_hopcount = 0;
-		dhpointer->dhcp_xid = htonl(dhcp_xid);
-		dhpointer->dhcp_secs = 0;
-		dhpointer->dhcp_flags = bcast_flag;
-		if (unicast_flag)
-			dhpointer->dhcp_cip = unicast_ip_address;
-		else
-			dhpointer->dhcp_cip = 0;
-		dhpointer->dhcp_yip = 0;
-		dhpointer->dhcp_sip = dhcph_g->dhcp_sip;
-		dhpointer->dhcp_gip = inet_addr(giaddr);
-		memcpy(dhpointer->dhcp_chaddr, dhmac, ETHER_ADDR_LEN);
-		/*dhpointer->dhcp_sname 
-		  dhpointer->dhcp_file*/
-		dhpointer->dhcp_magic = htonl(DHCP_MAGIC);
-
-		/* DHCP option buffer is copied here to DHCP packet */
-		u_char *dhopt_pointer = (u_char *)(dhcp_packet_request + l2_hdr_size + l3_hdr_size + l4_hdr_size + dhcp_hdr_size);
-		memcpy(dhopt_pointer, dhopt_buff, dhopt_size);
-
-		/* UDP checksum is done here */
-		uh->check = l4_sum((u_int16_t *) (dhcp_packet_request + l2_hdr_size + l3_hdr_size), ((dhcp_hdr_size + dhopt_size + l4_hdr_size) / 2), (u_int16_t *)&iph->saddr, (u_int16_t *)&iph->daddr, htons(l4_proto), htons(l4_len)); 
+	if (padding_flag && dhcp_packet_size < MINIMUM_PACKET_SIZE) {
+		memset(dhopt_buff + dhopt_size, 0, MINIMUM_PACKET_SIZE - dhcp_packet_size);
+		dhopt_size += MINIMUM_PACKET_SIZE - dhcp_packet_size;
 	}
-	if(pkt_type == DHCP_MSGRELEASE) {
-		if(vlan == 0) {
-			struct ethernet_hdr *ethhdr = (struct ethernet_hdr *)dhcp_packet_release;
-			memcpy(ethhdr->ether_dhost, dmac, ETHER_ADDR_LEN);
-			memcpy(ethhdr->ether_shost, dhmac, ETHER_ADDR_LEN);
-			ethhdr->ether_type = htons(ETHERTYPE_IP);
-		} else {
-			struct vlan_hdr *vhdr = (struct vlan_hdr *)dhcp_packet_release;
-			memcpy(vhdr->vlan_dhost, dmac, ETHER_ADDR_LEN);
-			memcpy(vhdr->vlan_shost, dhmac, ETHER_ADDR_LEN);
-			vhdr->vlan_tpi = htons(ETHERTYPE_VLAN);
-			vhdr->vlan_priority_c_vid = htons(vlan);
-			vhdr->vlan_len = htons(ETHERTYPE_IP);
-		}
-		//print_buff(dhcp_packet_disc, sizeof(struct ethernet_hdr));
 
-		if (padding_flag && dhcp_packet_size < MINIMUM_PACKET_SIZE) {
-			memset(dhopt_buff + dhopt_size, 0, MINIMUM_PACKET_SIZE - dhcp_packet_size);
-			dhopt_size += MINIMUM_PACKET_SIZE - dhcp_packet_size;
-		}
+	struct iphdr *iph = (struct iphdr *)(dhcp_packet_send + l2_hdr_size);
+	iph->version = 4;
+	iph->ihl = 5;
+	iph->tos = l3_tos;
+	iph->tot_len = htons(l3_hdr_size +  l4_hdr_size + dhcp_hdr_size + dhopt_size);  
+	iph->id = 0;
+	iph->frag_off = 0;
+	iph->ttl = 64;
+	iph->protocol = 17;
+	iph->check = 0; // Filled later;
 
-		struct iphdr *iph = (struct iphdr *)(dhcp_packet_release + l2_hdr_size);
-		iph->version = 4;
-		iph->ihl = 5;
-		iph->tos = l3_tos;
-		iph->tot_len = htons(l3_hdr_size +  l4_hdr_size + dhcp_hdr_size + dhopt_size);  
-		iph->id = 0;
-		iph->frag_off = 0;
-		iph->ttl = 64;
-		iph->protocol = 17;
-		iph->check = 0; // Filled later;
-		iph->saddr = option50_ip; //inet_addr("0.0.0.0");
-		iph->daddr = server_id; //inet_addr("255.255.255.255");
-		iph->check = ipchksum((u_int16_t *)(dhcp_packet_release + l2_hdr_size), iph->ihl << 1);
-
-		struct udphdr *uh = (struct udphdr *) (dhcp_packet_release + l2_hdr_size + l3_hdr_size);
-		uh->source = htons(port + 1);
-		uh->dest = htons(port);
-		u_int16_t l4_proto = 17;
-		u_int16_t l4_len = (l4_hdr_size + dhcp_hdr_size + dhopt_size);
-		uh->len = htons(l4_len);
-		uh->check = 0; /* UDP checksum will be done after dhcp header*/
-
-		struct dhcpv4_hdr *dhpointer = (struct dhcpv4_hdr *)(dhcp_packet_release + l2_hdr_size + l3_hdr_size + l4_hdr_size);
-		dhpointer->dhcp_opcode = DHCP_REQUEST;
-		dhpointer->dhcp_htype = ARPHRD_ETHER;
-		dhpointer->dhcp_hlen = ETHER_ADDR_LEN;
-		dhpointer->dhcp_hopcount = 0;
-		dhpointer->dhcp_xid = htonl(dhcp_xid);
-		dhpointer->dhcp_secs = 0;
-		dhpointer->dhcp_flags = bcast_flag;
-		dhpointer->dhcp_cip = option50_ip;
-		dhpointer->dhcp_yip = 0;
-		dhpointer->dhcp_sip = 0;
-		dhpointer->dhcp_gip = inet_addr(giaddr);
-		memcpy(dhpointer->dhcp_chaddr, dhmac, ETHER_ADDR_LEN);
-		/*dhpointer->dhcp_sname 
-		  dhpointer->dhcp_file*/
-		dhpointer->dhcp_magic = htonl(DHCP_MAGIC);
-
-		/* DHCP option buffer is copied here to DHCP packet */
-		u_char *dhopt_pointer = (u_char *)(dhcp_packet_release + l2_hdr_size + l3_hdr_size + l4_hdr_size + dhcp_hdr_size);
-		memcpy(dhopt_pointer, dhopt_buff, dhopt_size);
-
-		/* UDP checksum is done here */
-		uh->check = l4_sum((u_int16_t *) (dhcp_packet_release + l2_hdr_size + l3_hdr_size), ((dhcp_hdr_size + dhopt_size + l4_hdr_size) / 2), (u_int16_t *)&iph->saddr, (u_int16_t *)&iph->daddr, htons(l4_proto), htons(l4_len)); 
+	switch (pkt_type) {
+		case DHCP_MSGDISCOVER:
+		case DHCP_MSGREQUEST:
+			if (unicast_flag)
+				iph->saddr = unicast_ip_address;
+			else
+				iph->saddr = inet_addr("0.0.0.0");
+			iph->daddr = inet_addr(server_addr);
+			break;
+			
+		case DHCP_MSGRELEASE:
+			iph->saddr = option50_ip; //inet_addr("0.0.0.0");
+			iph->daddr = server_id; //inet_addr("255.255.255.255");
+			break;
 	}
+	iph->check = ipchksum((u_int16_t *)(dhcp_packet_send + l2_hdr_size), iph->ihl << 1);
+
+	struct udphdr *uh = (struct udphdr *) (dhcp_packet_send + l2_hdr_size + l3_hdr_size);
+	uh->source = htons(port + 1);
+	uh->dest = htons(port);
+	u_int16_t l4_proto = 17;
+	u_int16_t l4_len = (l4_hdr_size + dhcp_hdr_size + dhopt_size);
+	uh->len = htons(l4_len);
+	uh->check = 0; /* UDP checksum will be done after dhcp header*/
+
+	struct dhcpv4_hdr *dhpointer = (struct dhcpv4_hdr *)(dhcp_packet_send + l2_hdr_size + l3_hdr_size + l4_hdr_size);
+	dhpointer->dhcp_opcode = DHCP_REQUEST;
+	dhpointer->dhcp_htype = ARPHRD_ETHER;
+	dhpointer->dhcp_hlen = ETHER_ADDR_LEN;
+	dhpointer->dhcp_hopcount = 0;
+	dhpointer->dhcp_xid = htonl(dhcp_xid);
+	dhpointer->dhcp_secs = 0;
+	dhpointer->dhcp_flags = bcast_flag;
+	dhpointer->dhcp_yip = 0;
+	if (unicast_flag)
+		dhpointer->dhcp_cip = unicast_ip_address;
+	else
+		dhpointer->dhcp_cip = 0;
+
+	switch (pkt_type) {
+		case DHCP_MSGDISCOVER:
+			dhpointer->dhcp_sip = 0;
+			break;
+
+		case DHCP_MSGRELEASE:
+			dhpointer->dhcp_cip = option50_ip;
+			dhpointer->dhcp_sip = 0;
+			break;
+
+		case DHCP_MSGREQUEST:
+			dhpointer->dhcp_sip = dhcph_g->dhcp_sip;
+			break;
+	}
+	dhpointer->dhcp_gip = inet_addr(giaddr);
+	memcpy(dhpointer->dhcp_chaddr, dhmac, ETHER_ADDR_LEN);
+	/*dhpointer->dhcp_sname 
+	  dhpointer->dhcp_file*/
+	dhpointer->dhcp_magic = htonl(DHCP_MAGIC);
+
+	/* DHCP option buffer is copied here to DHCP packet */
+	u_char *dhopt_pointer = (u_char *)(dhcp_packet_send + l2_hdr_size + l3_hdr_size + l4_hdr_size + dhcp_hdr_size);
+	memcpy(dhopt_pointer, dhopt_buff, dhopt_size);    
+
+	/* UDP checksum is done here */
+	uh->check = l4_sum((u_int16_t *) (dhcp_packet_send + l2_hdr_size + l3_hdr_size), ((dhcp_hdr_size + dhopt_size + l4_hdr_size) / 2), (u_int16_t *)&iph->saddr, (u_int16_t *)&iph->daddr, htons(l4_proto), htons(l4_len)); 
+
 	return 0;
 }
 
@@ -1039,45 +913,48 @@ int print_dhinfo(int pkt_type)
  */
 int map_all_layer_ptr(int pkt_type)
 {
-	if(pkt_type == DHCP_MSGOFFER && vlan != 0) {
-		vlan_hg = (struct vlan_hdr *)dhcp_packet_offer; 
-		iph_g = (struct iphdr *)(dhcp_packet_offer + l2_hdr_size);
-		uh_g = (struct udphdr *)(dhcp_packet_offer + l2_hdr_size + l3_hdr_size);
-		dhcph_g = (struct dhcpv4_hdr *)(dhcp_packet_offer + l2_hdr_size + l3_hdr_size + l4_hdr_size);
-		dhopt_pointer_g = (u_int8_t *)(dhcp_packet_offer + l2_hdr_size + l3_hdr_size + l4_hdr_size + sizeof(struct dhcpv4_hdr));
-	} else if(pkt_type == DHCP_MSGOFFER && vlan == 0) {
-		eth_hg = (struct ethernet_hdr *)dhcp_packet_offer;
-		iph_g = (struct iphdr *)(dhcp_packet_offer + l2_hdr_size);
-		uh_g = (struct udphdr *)(dhcp_packet_offer + l2_hdr_size + l3_hdr_size);
-		dhcph_g = (struct dhcpv4_hdr *)(dhcp_packet_offer + l2_hdr_size + l3_hdr_size + l4_hdr_size);
-		dhopt_pointer_g = (u_int8_t *)(dhcp_packet_offer + l2_hdr_size + l3_hdr_size + l4_hdr_size + sizeof(struct dhcpv4_hdr));
-	} else if(pkt_type == DHCP_MSGACK && vlan != 0) {
-		vlan_hg = (struct vlan_hdr *)dhcp_packet_ack; 
-		iph_g = (struct iphdr *)(dhcp_packet_ack + l2_hdr_size);
-		uh_g = (struct udphdr *)(dhcp_packet_ack + l2_hdr_size + l3_hdr_size);
-		dhcph_g = (struct dhcpv4_hdr *)(dhcp_packet_ack + l2_hdr_size + l3_hdr_size + l4_hdr_size);
-		dhopt_pointer_g = (u_int8_t *)(dhcp_packet_ack + l2_hdr_size + l3_hdr_size + l4_hdr_size + sizeof(struct dhcpv4_hdr));
-	} else if(pkt_type == DHCP_MSGACK && vlan == 0) {
-		eth_hg = (struct ethernet_hdr *)dhcp_packet_ack;
-		iph_g = (struct iphdr *)(dhcp_packet_ack + l2_hdr_size);
-		uh_g = (struct udphdr *)(dhcp_packet_ack + l2_hdr_size + l3_hdr_size);
-		dhcph_g = (struct dhcpv4_hdr *)(dhcp_packet_ack + l2_hdr_size + l3_hdr_size + l4_hdr_size);
-		dhopt_pointer_g = (u_int8_t *)(dhcp_packet_ack + l2_hdr_size + l3_hdr_size + l4_hdr_size + sizeof(struct dhcpv4_hdr));
-	} else if(pkt_type == ARP_MAP && vlan != 0) {
-		vlan_hg = (struct vlan_hdr *)arp_icmp_packet;
-		arp_hg = (struct arp_hdr *)(arp_icmp_packet + l2_hdr_size);
-	} else if(pkt_type == ARP_MAP && vlan == 0) {
-		eth_hg = (struct ethernet_hdr *)arp_icmp_packet;
-		arp_hg = (struct arp_hdr *)(arp_icmp_packet + l2_hdr_size);
-	} else if(pkt_type == ICMP_MAP && vlan != 0) {
-		vlan_hg = (struct vlan_hdr *)arp_icmp_packet;
-		iph_g = (struct iphdr *)(arp_icmp_packet + l2_hdr_size);
-		icmp_hg = (struct icmp_hdr *)(arp_icmp_packet + l2_hdr_size + l3_hdr_size);
-	} else if(pkt_type == ICMP_MAP && vlan == 0) {
-		eth_hg = (struct ethernet_hdr *)arp_icmp_packet;
-		iph_g = (struct iphdr *)(arp_icmp_packet + l2_hdr_size);
-		icmp_hg = (struct icmp_hdr *)(arp_icmp_packet + l2_hdr_size + l3_hdr_size);
+	switch (pkt_type) {
+		case DHCP_MSGOFFER:
+		case DHCP_MSGACK:
+			if (vlan != 0) {
+				vlan_hg = (struct vlan_hdr *)dhcp_packet_recv; 
+				iph_g = (struct iphdr *)(dhcp_packet_recv + l2_hdr_size);
+				uh_g = (struct udphdr *)(dhcp_packet_recv + l2_hdr_size + l3_hdr_size);
+				dhcph_g = (struct dhcpv4_hdr *)(dhcp_packet_recv + l2_hdr_size + l3_hdr_size + l4_hdr_size);
+				dhopt_pointer_g = (u_int8_t *)(dhcp_packet_recv + l2_hdr_size + l3_hdr_size + l4_hdr_size + sizeof(struct dhcpv4_hdr));
+			}
+			else {
+				eth_hg = (struct ethernet_hdr *)dhcp_packet_recv;
+				iph_g = (struct iphdr *)(dhcp_packet_recv + l2_hdr_size);
+				uh_g = (struct udphdr *)(dhcp_packet_recv + l2_hdr_size + l3_hdr_size);
+				dhcph_g = (struct dhcpv4_hdr *)(dhcp_packet_recv + l2_hdr_size + l3_hdr_size + l4_hdr_size);
+				dhopt_pointer_g = (u_int8_t *)(dhcp_packet_recv + l2_hdr_size + l3_hdr_size + l4_hdr_size + sizeof(struct dhcpv4_hdr));
+			}
+			break;
+		case ARP_MAP:
+			if (vlan != 0) {
+				vlan_hg = (struct vlan_hdr *)arp_icmp_packet;
+				arp_hg = (struct arp_hdr *)(arp_icmp_packet + l2_hdr_size);
+			}
+			else {
+				eth_hg = (struct ethernet_hdr *)arp_icmp_packet;
+				arp_hg = (struct arp_hdr *)(arp_icmp_packet + l2_hdr_size);
+			}
+			break;
+		case ICMP_MAP:
+			if (vlan != 0) {
+				vlan_hg = (struct vlan_hdr *)arp_icmp_packet;
+				iph_g = (struct iphdr *)(arp_icmp_packet + l2_hdr_size);
+				icmp_hg = (struct icmp_hdr *)(arp_icmp_packet + l2_hdr_size + l3_hdr_size);
+			}
+			else {
+				eth_hg = (struct ethernet_hdr *)arp_icmp_packet;
+				iph_g = (struct iphdr *)(arp_icmp_packet + l2_hdr_size);
+				icmp_hg = (struct icmp_hdr *)(arp_icmp_packet + l2_hdr_size + l3_hdr_size);
+			}
+			break;
 	}
+
 	return 0;
 }
 
