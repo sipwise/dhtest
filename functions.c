@@ -227,99 +227,67 @@ int recv_packet(int pkt_type)
 	int ret, retval, chk_pkt_state;
 	socklen_t sock_len;
 	fd_set read_fd;
-	struct timeval tval;
+	struct timeval tval, *tvp;
+	int timeout_rv, recv_len;
+	unsigned char *recv_buf;
+
 	tval.tv_sec = 5; 
 	tval.tv_usec = 0;
+	tvp = &tval;
 
-	if(pkt_type == DHCP_MSGOFFER) {
-		while(tval.tv_sec != 0) {
-			FD_ZERO(&read_fd);
-			FD_SET(sock_packet, &read_fd);
-			retval = select(sock_packet + 1, &read_fd, NULL, NULL, &tval);
-			if(retval == 0) {
-				return DHCP_DISC_RESEND;
-				break;
-			} else if ( retval > 0 && FD_ISSET(sock_packet, &read_fd)) {
-				sock_len = sizeof(ll);
-				ret = recvfrom(sock_packet,\
-						dhcp_packet_recv,\
-						sizeof(dhcp_packet_recv),\
-						0,\
-						(struct sockaddr *)&ll,
-						&sock_len);
-			}
-			else
-				abort();
-			if(ret >= 60) {
-				chk_pkt_state = check_packet(DHCP_MSGOFFER);
-				if(chk_pkt_state == DHCP_OFFR_RCVD) {
-					return DHCP_OFFR_RCVD;
-				}
-			} 
-		}
-		return DHCP_DISC_RESEND;
-	} else if(pkt_type == DHCP_MSGACK) {
-		while(tval.tv_sec != 0) {
-			FD_ZERO(&read_fd);
-			FD_SET(sock_packet, &read_fd);
-			retval = select(sock_packet + 1, &read_fd, NULL, NULL, &tval);
-			if(retval == 0) {
-				return DHCP_REQ_RESEND;
-				break;
-			} else if ( retval > 0 && FD_ISSET(sock_packet, &read_fd)){
-				sock_len = sizeof(ll);
-				ret = recvfrom(sock_packet,\
-						dhcp_packet_recv,\
-						sizeof(dhcp_packet_recv),\
-						0,\
-						(struct sockaddr *)&ll,
-						&sock_len);
-			}
-			else
-				abort();
-			if(ret >= 60) {
-				chk_pkt_state = check_packet(DHCP_MSGACK);
-				if(chk_pkt_state == DHCP_ACK_RCVD) {
-					return DHCP_ACK_RCVD;
-				} else if(chk_pkt_state == DHCP_NAK_RCVD) {
-					return DHCP_NAK_RCVD;
-				}
-			} 
-		}
-		return DHCP_REQ_RESEND;
-	} else if(pkt_type == ARP_ICMP_RCV) {
-		while(tval_listen.tv_sec != 0) {
-			FD_ZERO(&read_fd);
-			FD_SET(sock_packet, &read_fd);
-			retval = select(sock_packet + 1, &read_fd, NULL, NULL, &tval_listen);
-			if(retval == 0) {
-				return LISTEN_TIMOUET;
-				break;
-			} else if ( retval > 0 && FD_ISSET(sock_packet, &read_fd)) {
-				sock_len = sizeof(ll);
-				ret = recvfrom(sock_packet,\
-						arp_icmp_packet,\
-						sizeof(arp_icmp_packet),\
-						0,\
-						(struct sockaddr *)&ll,
-						&sock_len);
-			}
-			else
-				abort();
-			if(ret >= 60) {
-				chk_pkt_state = check_packet(ARP_ICMP_RCV);
-				if(chk_pkt_state == ARP_RCVD) {
-					return ARP_RCVD;
-					break;
-				} else if(chk_pkt_state == ICMP_RCVD) {
-					return ICMP_RCVD;
-					break;
-				}
-			} 
-		}
-		return LISTEN_TIMOUET;
+	switch (pkt_type) {
+		case DHCP_MSGOFFER:
+			timeout_rv = DHCP_DISC_RESEND;
+			recv_buf = dhcp_packet_recv;
+			recv_len = sizeof(dhcp_packet_recv);
+			break;
+		case DHCP_MSGACK:
+			timeout_rv = DHCP_REQ_RESEND;
+			recv_buf = dhcp_packet_recv;
+			recv_len = sizeof(dhcp_packet_recv);
+			break;
+		case ARP_ICMP_RCV:
+			tvp = &tval_listen;
+			timeout_rv = LISTEN_TIMEOUT;
+			recv_buf = arp_icmp_packet;
+			recv_len = sizeof(arp_icmp_packet);
+			break;
+		default:
+			abort();
 	}
-	return 0;
+
+	while(tvp->tv_sec != 0) {
+		FD_ZERO(&read_fd);
+		FD_SET(sock_packet, &read_fd);
+		retval = select(sock_packet + 1, &read_fd, NULL, NULL, tvp);
+		if (retval == 0)
+			return timeout_rv;
+		if (retval < 0)
+			abort();
+
+		sock_len = sizeof(ll);
+		ret = recvfrom(sock_packet,
+				recv_buf,
+				recv_len,
+				0,
+				(struct sockaddr *)&ll,
+				&sock_len);
+
+		if (ret < 0)
+			return timeout_rv;
+
+		chk_pkt_state = check_packet(pkt_type);
+
+		switch (chk_pkt_state) {
+			case DHCP_OFFR_RCVD:
+			case DHCP_ACK_RCVD:
+			case DHCP_NAK_RCVD:
+			case ARP_RCVD:
+			case ICMP_RCVD:
+				return chk_pkt_state;
+		}
+	}
+	return timeout_rv;
 }
 
 /* Debug function - Prints the buffer on HEX format */

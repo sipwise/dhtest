@@ -284,7 +284,7 @@ struct dhcpv4_hdr
 #define ICMP_RCVD		12
 #define ARP_SEND		13
 #define ICMP_SEND		14
-#define LISTEN_TIMOUET	 	15
+#define LISTEN_TIMEOUT	 	15
 
 
 /*

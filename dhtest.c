@@ -484,7 +484,7 @@ int main(int argc, char *argv[])
 		fprintf(stdout, "\nListening on %s for ARP and ICMP protocols\n", iface_name);
 		fprintf(stdout, "IP address: %s, Listen timeout: %d seconds\n", get_ip_str(htonl(ip_address)), listen_timeout);
 		int arp_icmp_rcv_state = 0;
-		while(arp_icmp_rcv_state != LISTEN_TIMOUET) { 
+		while(arp_icmp_rcv_state != LISTEN_TIMEOUT) { 
 			arp_icmp_rcv_state = recv_packet(ARP_ICMP_RCV);
 			/* Send ARP reply if ARP request received */
 			if(arp_icmp_rcv_state == ARP_RCVD) {
