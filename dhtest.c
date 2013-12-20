@@ -18,25 +18,14 @@
 #include <stdlib.h>
 #include "headers.h"
 
-int sock_packet, iface = 2;	/* Socket descripter & transmit interface index */
+int iface = 2;	/* Socket descripter & transmit interface index */
 struct sockaddr_ll ll = { 0 };	/* Socket address structure */
 u_int16_t vlan = 0;		
 u_int8_t l3_tos = 0;		
 u_int16_t l2_hdr_size = 14;	
 u_int16_t l3_hdr_size = 20;	
 u_int16_t l4_hdr_size = 8;	
-u_int16_t dhcp_hdr_size = sizeof(struct dhcpv4_hdr);
 
-/* All protocheader sizes */
-
-/* DHCP packet, option buffer and size of option buffer */
-u_char dhcp_packet_disc[1518] = { 0 };
-u_char dhcp_packet_offer[1518] = { 0 };
-u_char dhcp_packet_request[1518] = { 0 };
-u_char dhcp_packet_ack[1518] = { 0 };
-u_char dhcp_packet_release[1518] = { 0 };
-
-u_int32_t dhopt_size = { 0 };
 u_char dhmac[ETHER_ADDR_LEN] = { 0 };
 u_char dmac[ETHER_ADDR_LEN];
 

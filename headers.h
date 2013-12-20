@@ -312,8 +312,6 @@ struct dhcpv4_hdr
 #define MINIMUM_PACKET_SIZE 300
 
 //Defined in dhtest.c
-extern int sock_packet;
-extern struct sockaddr_ll ll;
 extern int iface;
 extern u_int16_t vlan;
 extern u_int8_t l3_tos;
@@ -321,11 +319,9 @@ extern u_int8_t l3_tos;
 extern u_int16_t l2_hdr_size;
 extern u_int16_t l3_hdr_size;
 extern u_int16_t l4_hdr_size;
-extern u_int16_t dhcp_hdr_size;
 extern u_int16_t fqdn_n;
 extern u_int16_t fqdn_s;
 
-extern u_int32_t dhopt_size;
 extern u_int32_t dhcp_xid;
 extern int bcast_flag;
 extern int timeout;

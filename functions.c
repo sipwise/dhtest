@@ -26,6 +26,10 @@ static unsigned char dhcp_packet_offer[1518] = { 0 };
 static unsigned char dhcp_packet_request[1518] = { 0 };
 static unsigned char dhcp_packet_ack[1518] = { 0 };
 static unsigned char dhcp_packet_release[1518] = { 0 };
+static u_int16_t dhcp_hdr_size = sizeof(struct dhcpv4_hdr);
+static u_int32_t dhopt_size = { 0 };
+static struct sockaddr_ll ll = { 0 };	/* Socket address structure */
+static int sock_packet;
 
 
 /*
