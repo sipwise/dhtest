@@ -92,9 +92,15 @@ struct arp_hdr
 #define ARPOP_INVREQUEST 8  /* req to identify peer */
 #define ARPOP_INVREPLY   9  /* resp identifying peer */
 	u_int8_t sender_mac[ETHER_ADDR_LEN];
-	u_int8_t sender_ip[IP_ADDR_LEN];
+	union {
+		u_int8_t sender_ip[IP_ADDR_LEN];
+		u_int32_t sender_ip32;
+	};
 	u_int8_t target_mac[ETHER_ADDR_LEN];
-	u_int8_t target_ip[IP_ADDR_LEN];
+	union {
+		u_int8_t target_ip[IP_ADDR_LEN];
+		u_int32_t target_ip32;
+	};
 };
 
 /*

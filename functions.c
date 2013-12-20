@@ -921,11 +921,11 @@ int check_packet(int pkt_type)
 		map_all_layer_ptr(ARP_MAP); 
 		if(!vlan) {
 
-			if((ntohs(arp_hg->ar_op)) == ARPOP_REQUEST && (htonl(ip_address)) == (*((u_int32_t *)(arp_hg->target_ip)))) {
+			if((ntohs(arp_hg->ar_op)) == ARPOP_REQUEST && htonl(ip_address) == arp_hg->target_ip32) {
 				return ARP_RCVD;
 			}
 		} else if(vlan && ntohs(vlan) == vlan_hg->vlan_priority_c_vid) {
-			if((ntohs(arp_hg->ar_op)) == ARPOP_REQUEST && (htonl(ip_address)) == (*((u_int32_t *)(arp_hg->target_ip)))) {
+			if((ntohs(arp_hg->ar_op)) == ARPOP_REQUEST && htonl(ip_address) == arp_hg->target_ip32) {
 				fprintf(stdout, "Arp request received\n"); 
 				return ARP_RCVD;
 			}
