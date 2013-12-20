@@ -103,22 +103,11 @@ struct arp_hdr
 	};
 };
 
-/*
- *  Ethernet II header
- *  Static header size: 14 bytes
- */
-struct ethernet_hdr
-{
-	u_int8_t  ether_dhost[ETHER_ADDR_LEN];/* destination ethernet address */
-	u_int8_t  ether_shost[ETHER_ADDR_LEN];/* source ethernet address */
-	u_int16_t ether_type;                 /* protocol */
-};
-
 /**
  * IEEE 802.1Q (Virtual Local Area Network) VLAN header, static header 
  * size: 18 bytes
  */
-struct vlan_hdr
+struct vlan_eth_hdr
 {
 	u_int8_t vlan_dhost[ETHER_ADDR_LEN];  /**< destination ethernet address */
 	u_int8_t vlan_shost[ETHER_ADDR_LEN];  /**< source ethernet address */
