@@ -20,24 +20,6 @@ static unsigned char dhopt_buff[500];
 static struct arp_hdr *arp_hg;
 static struct icmp_hdr *icmp_hg;
 
-extern u_char dhmac[ETHER_ADDR_LEN];
-extern u_char dmac[ETHER_ADDR_LEN];
-
-extern char dhmac_fname[20];
-extern char iface_name[30];
-extern char ip_str[128];
-extern u_int32_t server_id, option50_ip;
-extern u_int8_t dhcp_release_flag;
-
-extern u_int32_t unicast_ip_address;
-extern u_int32_t ip_address;
-extern u_char ip_listen_flag;
-extern u_char arp_icmp_packet[1514];
-extern u_char arp_icmp_reply[1514];
-extern u_int16_t icmp_len;
-extern struct timeval tval_listen;
-extern u_int32_t listen_timeout;
-
 /* DHCP packet, option buffer and size of option buffer */
 static unsigned char dhcp_packet_disc[1518] = { 0 };
 static unsigned char dhcp_packet_offer[1518] = { 0 };
