@@ -443,9 +443,11 @@ int build_option50()
  */
 int build_option51()
 {
+	u_int32_t msg = htonl(option51_lease_time);
+
 	dhopt_buff[dhopt_size++] = DHCP_LEASETIME;
 	dhopt_buff[dhopt_size++] = 4;
-	memcpy(dhopt_buff + dhopt_size, &option50_ip, 4);
+	memcpy(dhopt_buff + dhopt_size, &msg, 4);
 	dhopt_size += 4;
 	return 0;
 }
@@ -456,7 +458,7 @@ int build_option54()
 {
 	dhopt_buff[dhopt_size++] = DHCP_SERVIDENT;
 	dhopt_buff[dhopt_size++] = 4;
-	memcpy(dhopt_buff + dhopt_size, &option50_ip, 4);
+	memcpy(dhopt_buff + dhopt_size, &server_id, 4);
 	dhopt_size += 4;
 	return 0;
 }
