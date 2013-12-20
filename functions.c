@@ -68,9 +68,6 @@ int set_promisc()
 {
 	int status;
 	struct ifreq ifr;
-	if(!strlen(iface_name)) {
-		strcpy(iface_name, "eth0");
-	}
 	strcpy(ifr.ifr_name, iface_name);
 	ifr.ifr_flags = (IFF_PROMISC | IFF_UP);
 	status = ioctl(sock_packet, SIOCSIFFLAGS, &ifr);
@@ -109,9 +106,6 @@ u_int32_t get_interface_address()
 	int status;
 	struct ifreq ifr;
 
-	if(!strlen(iface_name)) {
-		strcpy(iface_name, "eth0");
-	}
 	strcpy(ifr.ifr_name, iface_name);
 	ifr.ifr_addr.sa_family = AF_INET;
 	status = ioctl(sock_packet, SIOCGIFADDR, &ifr);

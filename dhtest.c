@@ -41,7 +41,7 @@ u_char dhmac[ETHER_ADDR_LEN] = { 0 };
 u_char dmac[ETHER_ADDR_LEN];
 
 char dhmac_fname[20];
-char iface_name[30] = { 0 };
+char *iface_name = "eth0";
 char ip_str[128];
 u_int8_t dhmac_flag = 0;
 u_int32_t server_id = { 0 }, option50_ip = { 0 };
@@ -187,12 +187,7 @@ int main(int argc, char *argv[])
 				break;
 
 			case 'i':
-				iface = if_nametoindex(optarg);
-				if(iface == 0) {
-					fprintf(stdout, "Interface doesnot exist\n");
-					exit(2);
-				}
-				strncpy(iface_name, optarg, 29);
+				iface_name = optarg;
 				break;
 
 			case 'v':
@@ -339,6 +334,11 @@ int main(int argc, char *argv[])
 
 	if(!dhmac_flag) {
 		print_help(argv[0]);
+		exit(2);
+	}
+	iface = if_nametoindex(iface_name);
+	if(iface == 0) {
+		fprintf(stdout, "Interface %s does not exist\n", iface_name);
 		exit(2);
 	}
 	/* Opens the PF_PACKET socket */

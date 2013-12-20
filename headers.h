@@ -351,7 +351,7 @@ extern u_char dhmac[ETHER_ADDR_LEN];
 extern u_char dmac[ETHER_ADDR_LEN];
 
 extern char dhmac_fname[20];
-extern char iface_name[30];
+extern char *iface_name;
 extern char ip_str[128];
 extern u_int32_t server_id, option50_ip;
 extern u_int8_t dhcp_release_flag;
