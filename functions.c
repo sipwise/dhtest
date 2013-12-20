@@ -34,6 +34,7 @@ static int sock_packet;
 static u_char arp_icmp_packet[1514] = { 0 };
 static u_char arp_icmp_reply[1514] = { 0 };
 static u_int16_t icmp_len = 0;
+static int have_set_promisc;
 
 
 /*
@@ -72,38 +73,53 @@ int close_socket()
 /*
  * Sets the promiscous mode on the interface
  */
+static int set_clear_promisc(int op) 
+{
+	struct ifreq ifr;
+
+	if (!op && !have_set_promisc)
+		return 0;
+
+	memset(&ifr, 0, sizeof(ifr));
+	strcpy(ifr.ifr_name, iface_name);
+
+	if (ioctl(sock_packet, SIOCGIFFLAGS, &ifr))
+		goto error;
+
+	if (op) {
+		if ((ifr.ifr_flags & IFF_PROMISC)) {
+			have_set_promisc = 0;
+			return 0;
+		}
+		have_set_promisc = 1;
+	}
+
+	if (op)
+		ifr.ifr_flags |= IFF_PROMISC;
+	else
+		ifr.ifr_flags &= ~IFF_PROMISC;
+
+	if (ioctl(sock_packet, SIOCSIFFLAGS, &ifr))
+		goto error;
+
+	return 0;
+
+error:
+	if (nagios_flag)
+		fprintf(stdout, "CRITICAL: Error setting promisc.");
+	else
+		perror("Error on setting promisc");
+	exit(2);
+}
+
 int set_promisc() 
 {
-	int status;
-	struct ifreq ifr;
-	strcpy(ifr.ifr_name, iface_name);
-	ifr.ifr_flags = (IFF_PROMISC | IFF_UP);
-	status = ioctl(sock_packet, SIOCSIFFLAGS, &ifr);
-	if(status < 0) {
-		if (nagios_flag)
-			fprintf(stdout, "CRITICAL: Error setting promisc.");
-		else
-			perror("Error on setting promisc");
-		exit(2);
-	}
-	return 0;
+	return set_clear_promisc(1);
 }
 
 int clear_promisc() 
 {
-	int status;
-	struct ifreq ifr;
-	strcpy(ifr.ifr_name, iface_name);
-	ifr.ifr_flags = IFF_UP;
-	status = ioctl(sock_packet, SIOCSIFFLAGS, &ifr);
-	if(status < 0) {
-		if (nagios_flag)
-			fprintf(stdout, "CRITICAL: Error on disabling promisc");
-		else
-			perror("Error on disabling promisc");
-		exit(2);
-	}
-	return 0;
+	return set_clear_promisc(0);
 }
 
 /*
