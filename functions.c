@@ -1053,6 +1053,7 @@ int print_dhinfo(int pkt_type)
 		fprintf(stdout, "----------------------------------------------------------\n");
 		fprintf(stdout, "DHCP offered IP from server - %s\n", get_ip_str(dhcph_g->dhcp_yip));
 		fprintf(stdout, "Next server IP(Probably TFTP server) - %s\n", get_ip_str(dhcph_g->dhcp_sip));
+		fprintf(stdout, "Boot File Name (Probably used in PXE) - %s\n", dhcph_g->dhcp_file);
 		if(dhcph_g->dhcp_gip) {
 			fprintf(stdout, "DHCP Relay agent IP - %s\n", get_ip_str(dhcph_g->dhcp_gip));
 		}
@@ -1063,6 +1064,7 @@ int print_dhinfo(int pkt_type)
 		fprintf(stdout, "----------------------------------------------------------\n");
 		fprintf(stdout, "DHCP offered IP from server - %s\n", get_ip_str(dhcph_g->dhcp_yip));
 		fprintf(stdout, "Next server IP(Probably TFTP server) - %s\n", get_ip_str(dhcph_g->dhcp_sip));
+		fprintf(stdout, "Boot File Name (Probably used in PXE) - %s\n", dhcph_g->dhcp_file);
 		if(dhcph_g->dhcp_gip) {
 			fprintf(stdout, "DHCP Relay agent IP - %s\n", get_ip_str(dhcph_g->dhcp_gip));
 		}
