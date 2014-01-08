@@ -68,6 +68,8 @@ u_char ip_listen_flag = 0;
 struct timeval tval_listen = { 3600, 0 };
 u_int32_t listen_timeout = 3600;
 
+int quiet;
+
 /* Help routine for the command line interface */
 void print_help(char *cmd)
 {
@@ -98,6 +100,7 @@ void print_help(char *cmd)
 	printf("  -a, --nagios\t\t\t\t# Nagios output format. \n");
 	printf("  -S, --server\t\t[ address ]\t# Use server address instead of 255.255.255.255\n");
 	printf("  -V, --verbose\t\t\t\t# Prints DHCP offer and ack details\n");
+	printf("  -q, --quiet\t\t\t\t# Only print acquired IP address or errors\n");
 	printf("  dhtest version 1.3\n");
 }
 
@@ -157,17 +160,22 @@ int main(int argc, char *argv[])
 		{ "nagios", no_argument, 0, 'a'},
 		{ "server", required_argument, 0, 'S'},
 		{ "release", no_argument, 0, 'r'},
+		{ "quiet", no_argument, 0, 'q'},
 		{ 0, 0, 0, 0 }
 	};
 
 	/*getopt routine to get command line arguments*/
 	while(get_tmp < argc) {
-		get_cmd  = getopt_long(argc, argv, "m:Ri:v:t:bfVrpansu::T:P:g:S:I:o:k:L:h:d:F:",\
+		get_cmd  = getopt_long(argc, argv, "m:Ri:v:t:bfVrpansu::T:P:g:S:I:o:k:L:h:d:F:q",\
 				long_options, &option_index);
 		if(get_cmd == -1 ) {
 			break;
 		}
 		switch(get_cmd) {
+			case 'q':
+				quiet = 1;
+				break;
+
 			case 'm':
 				{
 					u_char aux_dhmac[ETHER_ADDR_LEN + 1];
@@ -457,10 +465,10 @@ int main(int argc, char *argv[])
 			}
 		}
 		if(dhcp_offer_state == DHCP_OFFR_RCVD) {
-			if (!nagios_flag)
+			if (!nagios_flag && !quiet)
 				printf("DHCP offer received\t - ");
 			set_serv_id_opt50();
-			if (!nagios_flag)
+			if (!nagios_flag && !quiet)
   				printf("Offered IP : %s\n", get_ip_str(dhcph_g->dhcp_yip));
 			if(!nagios_flag && verbose) { 
 				print_dhinfo(DHCP_MSGOFFER);
@@ -507,9 +515,13 @@ int main(int argc, char *argv[])
 		if(dhcp_ack_state == DHCP_ACK_RCVD) {
 			if (nagios_flag) {
 				printf("OK: Acquired IP: %s", get_ip_str(dhcph_g->dhcp_yip));
-			} else {
+			} else if (!quiet) {
 				printf("DHCP ack received\t - ");
 				printf("Acquired IP: %s\n", get_ip_str(dhcph_g->dhcp_yip));
+			}
+			else {
+				/* quiet */
+				printf("%s\n", get_ip_str(dhcph_g->dhcp_yip));
 			}
 
 			/* Logs DHCP IP details to log file. This file is used for DHCP release */
@@ -518,7 +530,7 @@ int main(int argc, char *argv[])
 				print_dhinfo(DHCP_MSGACK);
 			}
 		} else if (dhcp_ack_state == DHCP_NAK_RCVD) {
-			if (!nagios_flag) {
+			if (!nagios_flag && !quiet) {
 				printf("DHCP nack received\t - ");
 				printf("Client MAC : %02x:%02x:%02x:%02x:%02x:%02x\n", \
 					dhmac[0], dhmac[1], dhmac[2], dhmac[3], dhmac[4], dhmac[5]); 
@@ -527,8 +539,10 @@ int main(int argc, char *argv[])
 	}
 	/* If IP listen flag is enabled, Listen on obtained for ARP, ICMP protocols  */
 	if(!nagios_flag && ip_listen_flag) {
-		printf("\nListening on %s for ARP and ICMP protocols\n", iface_name);
-		printf("IP address: %s, Listen timeout: %d seconds\n", get_ip_str(htonl(ip_address)), listen_timeout);
+		if (!quiet) {
+			printf("\nListening on %s for ARP and ICMP protocols\n", iface_name);
+			printf("IP address: %s, Listen timeout: %d seconds\n", get_ip_str(htonl(ip_address)), listen_timeout);
+		}
 		int arp_icmp_rcv_state = 0;
 		while(arp_icmp_rcv_state != LISTEN_TIMEOUT) { 
 			arp_icmp_rcv_state = recv_packet(ARP_ICMP_RCV);

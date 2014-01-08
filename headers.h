@@ -347,6 +347,7 @@ extern u_int32_t ip_address;
 extern u_char ip_listen_flag;
 extern struct timeval tval_listen;
 extern u_int32_t listen_timeout;
+extern int quiet;
 
 
 #endif  /* __HEADERS_H */

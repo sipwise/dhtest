@@ -186,17 +186,17 @@ int send_packet(int pkt_type)
 		return PACK_SEND_ERR;
 	} else {
 		if(pkt_type == DHCP_MSGDISCOVER) {
-			if (!nagios_flag) {
+			if (!nagios_flag && !quiet) {
 				printf("DHCP discover sent\t - ");
 				printf("Client MAC : " ETH_F_FMT "\n", ETH_F_ARG(dhmac));
 			}
 		} else if (pkt_type == DHCP_MSGREQUEST) {
-			if (!nagios_flag) {
+			if (!nagios_flag && !quiet) {
 				printf("DHCP request sent\t - ");
 				printf("Client MAC : " ETH_F_FMT "\n", ETH_F_ARG(dhmac));
 			}
 		} else if (pkt_type == DHCP_MSGRELEASE) { 
-			if (!nagios_flag) {
+			if (!nagios_flag && !quiet) {
 				printf("DHCP release sent\t - ");
 				printf("Client MAC : " ETH_F_FMT "\n", ETH_F_ARG(dhmac));
 			}
@@ -723,7 +723,8 @@ int check_packet(int pkt_type)
 			}
 		} else if(vlan && ntohs(vlan) == vlan_hg->vlan_priority_c_vid) {
 			if((ntohs(arp_hg->ar_op)) == ARPOP_REQUEST && htonl(ip_address) == arp_hg->target_ip32) {
-				printf("Arp request received\n"); 
+				if (!quiet)
+					printf("Arp request received\n"); 
 				return ARP_RCVD;
 			}
 		}
