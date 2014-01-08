@@ -106,7 +106,7 @@ static int set_clear_promisc(int op)
 
 error:
 	if (nagios_flag)
-		fprintf(stderr, "CRITICAL: Error setting promisc.");
+		printf("CRITICAL: Error setting promisc.");
 	else
 		perror("Error on setting promisc");
 	exit(2);
@@ -136,7 +136,7 @@ u_int32_t get_interface_address()
 
 	if(status < 0) {
 		if (nagios_flag)
-			fprintf(stderr, "CRITICAL: Error getting interface address.");
+			printf("CRITICAL: Error getting interface address.");
 		else
 			perror("Error getting interface address.");
 		exit(2);
@@ -187,7 +187,7 @@ int send_packet(int pkt_type)
 
 	if(ret < 0) {
 		if (nagios_flag)
-			fprintf(stderr, "CRITICAL: Packet send failure.");
+			printf("CRITICAL: Packet send failure.");
 		else
 			perror("Packet send failure");
 		close(sock_packet);
@@ -892,7 +892,7 @@ int log_dhinfo()
 	dh_file = fopen(dhmac_fname, "w");
 	if(dh_file == NULL) {
 		if (nagios_flag)
-			fprintf(stderr, "CRITICAL: Error on opening file.");
+			printf("CRITICAL: Error on opening file.");
 		else
 			perror("Error on opening file.");
 		exit(2);

@@ -354,7 +354,7 @@ int main(int argc, char *argv[])
 	/* Opens the PF_PACKET socket */
 	if(open_socket() < 0) {
 		if (nagios_flag)
-			fprintf(stderr, "CRITICAL: Socket error.");
+			printf("CRITICAL: Socket error.");
 		else
 			fprintf(stderr, "Socket error\n");
 		exit(2);
@@ -378,7 +378,7 @@ int main(int argc, char *argv[])
 	if(dhcp_release_flag) {
 		if(get_dhinfo() == ERR_FILE_OPEN) {
 			if (nagios_flag) {
-				fprintf(stderr, "CRITICAL: Error on opening DHCP info file.");
+				printf("CRITICAL: Error on opening DHCP info file.");
 			} else {
 				fprintf(stderr, "Error on opening DHCP info file\n");
 				fprintf(stderr, "Release the DHCP IP after acquiring\n");
@@ -438,7 +438,7 @@ int main(int argc, char *argv[])
 			time_now = time(NULL);
 			if((time_now - time_last) > timeout) {
 				if (nagios_flag)
-					fprintf(stderr, "CRITICAL: Timeout reached: DISCOVER.");
+					printf("CRITICAL: Timeout reached: DISCOVER.");
 				close_socket();
 				exit(2);
 			}
@@ -484,7 +484,7 @@ int main(int argc, char *argv[])
 			time_now = time(NULL);
 			if((time_now - time_last) > timeout) {
 				if (nagios_flag)
-					fprintf(stderr, "CRITICAL: Timeout reached: REQUEST.");
+					printf("CRITICAL: Timeout reached: REQUEST.");
 				else
 					fprintf(stderr, "Timeout reached. Exiting\n");
 				close_socket();
