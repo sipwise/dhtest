@@ -37,6 +37,7 @@ static u_char arp_icmp_reply[1514] = { 0 };
 static u_int16_t icmp_len = 0;
 static int have_set_promisc;
 static unsigned int lease_time;
+u_char dmac[ETHER_ADDR_LEN];
 
 
 
@@ -927,28 +928,43 @@ static int map_all_layer_ptr(int pkt_type)
  */
 int log_dhinfo()
 {
-	map_all_layer_ptr(DHCP_MSGACK);
-	FILE *dh_file;
+	int dh_file;
+	struct dhcp_status ds;
 
-	dh_file = fopen(dhmac_fname, "w");
-	if(dh_file == NULL) {
+	dh_file = open(dhmac_fname, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	if (dh_file < 0) {
 		if (nagios_flag)
-			printf("CRITICAL: Error on opening file.");
+			printf("CRITICAL: Error opening file.");
 		else
-			perror("Error on opening file.");
+			perror("Error opening file.");
 		exit(2);
 	}
-	fprintf(dh_file, "Client_mac: " ETH_F_FMT "\n", ETH_F_ARG(dhmac));
-	fprintf(dh_file, "Acquired_ip: %s\n", get_ip_str(dhcph_g->dhcp_yip));
-	fprintf(dh_file, "Server_id: %s\n", get_ip_str(server_id));
-	fprintf(dh_file, "Host_mac: " ETH_F_FMT "\n", ETH_F_ARG(vlan_hg->vlan_shost));
-	ip_address = ntohl(dhcph_g->dhcp_yip);
-	if(ip_listen_flag) {
-		fprintf(dh_file, "IP_listen: True. Pid: %d\n", getpid());
-	} else {
-		fprintf(dh_file, "IP_listen: False. Pid: %d\n", 0);
+
+	memset(&ds, 0, sizeof(ds));
+
+	ds.magic = STATUS_MAGIC;
+	memcpy(&ds.client_mac, dhmac, sizeof(ds.client_mac));
+	if (dhcph_g && vlan_hg) {
+		ds.have_ip = 1;
+		ds.client_ip = dhcph_g->dhcp_yip;
+		ds.server_ip = server_id;
+		memcpy(&ds.server_mac, vlan_hg->vlan_shost, sizeof(ds.server_mac));
+		time(&ds.acquired_at);
+		ds.lease_time = lease_time;
 	}
-	fclose(dh_file);
+
+	if (ip_listen_flag)
+		ds.listen_pid = getpid();
+
+	if (write(dh_file, &ds, sizeof(ds)) != sizeof(ds)) {
+		if (nagios_flag)
+			printf("CRITICAL: Error writing to file.");
+		else
+			perror("Error writing to file.");
+		exit(2);
+	}
+	close(dh_file);
+
 	return 0;
 }
 
@@ -958,25 +974,27 @@ int log_dhinfo()
  */
 int get_dhinfo()
 {
-	FILE *dh_file;
-	u_char aux_dmac[ETHER_ADDR_LEN];
-	char mac_tmp[20], acq_ip_tmp[20], serv_id_tmp[20], ip_listen_tmp[10];
-	pid_t dh_pid;
-	dh_file = fopen(dhmac_fname, "r");
-	if(dh_file == NULL) {
+	int dh_file;
+	struct dhcp_status ds;
+
+	dh_file = open(dhmac_fname, O_RDONLY);
+
+	if (read(dh_file, &ds, sizeof(ds)) != sizeof(ds))
 		return ERR_FILE_OPEN;
+
+	if(dh_file < 0)
+		return ERR_FILE_OPEN;
+
+	memcpy(dhmac, ds.client_mac, sizeof(dhmac));
+	if (ds.have_ip) {
+		option50_ip = ds.client_ip;
+		server_id = ds.server_ip;
+		memcpy(dmac, ds.server_mac, sizeof(dmac));
+		if (ds.listen_pid)
+			kill(ds.listen_pid, SIGKILL); /* XXX what about promisc mode? */
 	}
-	fscanf(dh_file, "Client_mac: %s\nAcquired_ip: %s\nServer_id: %s\n\
-			Host_mac: " ETH_F_FMT "\nIP_listen: %s Pid: %d\n", mac_tmp, acq_ip_tmp, serv_id_tmp,
-			ETH_F_PARG(aux_dmac),
-			ip_listen_tmp, &dh_pid);
-	memcpy(dmac, aux_dmac, sizeof(dmac));
-	option50_ip = inet_addr(acq_ip_tmp);
-	server_id = inet_addr(serv_id_tmp);
-	if((strncmp(ip_listen_tmp, "True", 4)) == 0) {
-		kill(dh_pid, SIGKILL);	
-	}
-	fclose(dh_file);
+
+	close(dh_file);
 	unlink(dhmac_fname);
 	return 0;
 }

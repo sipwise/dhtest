@@ -28,7 +28,6 @@ u_int16_t l3_hdr_size = 20;
 u_int16_t l4_hdr_size = 8;	
 
 u_char dhmac[ETHER_ADDR_LEN] = { 0 };
-u_char dmac[ETHER_ADDR_LEN];
 
 int dhmac_fname_flag;
 char dhmac_fname[256];

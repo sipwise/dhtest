@@ -303,6 +303,23 @@ struct dhcpv4_hdr
  */
 #define MINIMUM_PACKET_SIZE 300
 
+
+
+/* format of the log/status file */
+#define STATUS_MAGIC 0xD47E57
+struct dhcp_status {
+	unsigned int magic;
+	unsigned char client_mac[ETHER_ADDR_LEN];
+	int have_ip;
+	u_int32_t client_ip, server_ip;
+	unsigned char server_mac[ETHER_ADDR_LEN];
+	time_t acquired_at;
+	unsigned int lease_time;
+	pid_t listen_pid;
+};
+
+
+
 //Defined in dhtest.c
 extern int iface;
 extern u_int16_t vlan;
@@ -331,7 +348,6 @@ extern char *server_addr;
 extern struct dhcpv4_hdr *dhcph_g;
 
 extern u_char dhmac[ETHER_ADDR_LEN];
-extern u_char dmac[ETHER_ADDR_LEN];
 
 extern char dhmac_fname[];
 extern char *iface_name;
