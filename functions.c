@@ -62,15 +62,6 @@ int open_socket()
 }
 
 /*
- * Closes PF_PACKET socket
- */
-int close_socket()
-{
-	close(sock_packet);
-	return 0;
-}
-
-/*
  * Sets the promiscous mode on the interface
  */
 static int set_clear_promisc(int op) 

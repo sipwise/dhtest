@@ -16,6 +16,7 @@
 #include <getopt.h>
 #include <time.h>
 #include <stdlib.h>
+#include <signal.h>
 #include "headers.h"
 
 int iface = 2;	/* Socket descripter & transmit interface index */
@@ -101,6 +102,16 @@ void print_help(char *cmd)
 }
 
 
+static void cleanup(void) {
+	clear_promisc();
+}
+
+static void sigcleanup(int sig) {
+	fprintf(stderr, "signal %i received, aborting\n", sig);
+	exit(2);
+}
+
+
 int main(int argc, char *argv[])
 {
 	int get_tmp = 1, get_cmd;
@@ -111,6 +122,12 @@ int main(int argc, char *argv[])
 	}
 
 	init_rand();
+	atexit(cleanup);
+	signal(SIGSEGV, sigcleanup);
+	signal(SIGABRT, sigcleanup);
+	signal(SIGTERM, sigcleanup);
+	signal(SIGINT, sigcleanup);
+	signal(SIGHUP, sigcleanup);
 
 	int option_index = 0;
 	static struct option long_options[] = {
@@ -395,8 +412,6 @@ int main(int argc, char *argv[])
 		build_optioneof();		 /* End of option */
 		build_dhpacket(DHCP_MSGRELEASE); /* Build DHCP release packet */
 		send_packet(DHCP_MSGRELEASE);	 /* Send DHCP release packet */
-		clear_promisc();		 /* Clear the promiscuous mode */
-		close_socket();
 		return 0; 
 	}
 	if(timeout) {
@@ -438,7 +453,6 @@ int main(int argc, char *argv[])
 			if((time_now - time_last) > timeout) {
 				if (nagios_flag)
 					printf("CRITICAL: Timeout reached: DISCOVER.");
-				close_socket();
 				exit(2);
 			}
 		}
@@ -486,7 +500,6 @@ int main(int argc, char *argv[])
 					printf("CRITICAL: Timeout reached: REQUEST.");
 				else
 					fprintf(stderr, "Timeout reached. Exiting\n");
-				close_socket();
 				exit(1);
 			}
 		}
@@ -539,9 +552,5 @@ int main(int argc, char *argv[])
 		}
 		printf("Listen timout reached\n");
 	}
-	/* Clear the promiscuous mode */
-	clear_promisc();
-	/* Close the socket */
-	close_socket();
 	return 0;
 }

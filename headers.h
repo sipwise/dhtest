@@ -18,7 +18,6 @@
  */
 
 int open_socket(void);		/* Opens PF_PACKET socket*/
-int close_socket(void);		/* Close PF_PACKET socket */
 int set_promisc(void);
 int clear_promisc(void);
 int send_packet(int pkt_type);	/* Sends DHCP packet socket*/
