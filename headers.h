@@ -8,6 +8,10 @@
 #include<netinet/in.h>
 #define HEADERS_H
 
+
+#define ETH_F_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
+#define ETH_F_ARG(x) (x)[0], (x)[1], (x)[2], (x)[3], (x)[4], (x)[5]
+
 /*
  *  Functions used in functions.c
  */
@@ -332,7 +336,7 @@ extern u_int8_t *dhopt_pointer_g;
 extern u_char dhmac[ETHER_ADDR_LEN];
 extern u_char dmac[ETHER_ADDR_LEN];
 
-extern char dhmac_fname[20];
+extern char dhmac_fname[];
 extern char *iface_name;
 extern char ip_str[128];
 extern u_int32_t server_id, option50_ip;

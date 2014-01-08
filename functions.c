@@ -900,12 +900,10 @@ int log_dhinfo()
 			perror("Error on opening file.");
 		exit(2);
 	}
-	fprintf(dh_file, "Client_mac: %s\n", dhmac_fname);
+	fprintf(dh_file, "Client_mac: " ETH_F_FMT "\n", ETH_F_ARG(dhmac));
 	fprintf(dh_file, "Acquired_ip: %s\n", get_ip_str(dhcph_g->dhcp_yip));
 	fprintf(dh_file, "Server_id: %s\n", get_ip_str(server_id));
-	fprintf(dh_file, "Host_mac: %02X:%02X:%02X:%02X:%02X:%02X\n", vlan_hg->vlan_shost[0],\
-			vlan_hg->vlan_shost[1], vlan_hg->vlan_shost[2], vlan_hg->vlan_shost[3],\
-			vlan_hg->vlan_shost[4], vlan_hg->vlan_shost[5]);
+	fprintf(dh_file, "Host_mac: " ETH_F_FMT "\n", ETH_F_ARG(vlan_hg->vlan_shost));
 	ip_address = ntohl(dhcph_g->dhcp_yip);
 	if(ip_listen_flag) {
 		fprintf(dh_file, "IP_listen: True. Pid: %d\n", getpid());

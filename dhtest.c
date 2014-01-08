@@ -30,7 +30,7 @@ u_char dhmac[ETHER_ADDR_LEN] = { 0 };
 u_char dmac[ETHER_ADDR_LEN];
 
 int dhmac_fname_flag;
-char dhmac_fname[20];
+char dhmac_fname[256];
 char *iface_name = "eth0";
 char ip_str[128];
 u_int8_t dhmac_flag = 0;
@@ -71,9 +71,10 @@ u_int32_t listen_timeout = 3600;
 void print_help(char *cmd)
 {
 	fprintf(stdout, "Usage: %s [ options ]\n", cmd);
-	fprintf(stdout, "  -m MAC_address\n");
-	fprintf(stdout, "  -R, --random-mac\t\t\tUse a randomly generated MAC address\n");
+	fprintf(stdout, "  -m\t\t\t\t\t# MAC_address\n");
+	fprintf(stdout, "  -R, --random-mac\t\t\t# Use a randomly generated MAC address\n");
 	fprintf(stdout, "  -r, --release\t\t\t\t# Releases obtained DHCP IP for corresponding MAC\n");
+	fprintf(stdout, "  -F, --log-filename\t\t\t# Log/status file, defaults to './$MAC'\n");
 	fprintf(stdout, "  -L, --option51-lease_time [ Lease_time ] # Option 51. Requested lease time in secondes\n");
 	fprintf(stdout, "  -I, --option50-ip\t[ IP_address ]\t# Option 50 IP address on DHCP discover\n");
 	fprintf(stdout, "  -o, --option60-vci\t[ VCI_string ]\t# Vendor Class Idendifier string\n");
@@ -93,7 +94,7 @@ void print_help(char *cmd)
 	fprintf(stdout, "  -P, --port\t\t[ port ]\t# Use port instead of 67\n");
 	fprintf(stdout, "  -g, --giaddr\t\t[ giaddr ]\t# Use giaddr instead of 0.0.0.0\n");
 	fprintf(stdout, "  -u<ip>, --unicast=<ip>\t\t# Unicast request, IP is optional. If not specified, the interface address will be used. \n");
-	fprintf(stdout, "  -a, --nagios\t\t# Nagios output format. \n");
+	fprintf(stdout, "  -a, --nagios\t\t\t\t# Nagios output format. \n");
 	fprintf(stdout, "  -S, --server\t\t[ address ]\t# Use server address instead of 255.255.255.255\n");
 	fprintf(stdout, "  -V, --verbose\t\t\t\t# Prints DHCP offer and ack details\n");
 	fprintf(stdout, "  dhtest version 1.3\n");
@@ -115,6 +116,7 @@ int main(int argc, char *argv[])
 	static struct option long_options[] = {
 		{ "mac", required_argument, 0, 'm' },
 		{ "random-mac", no_argument, 0, 'R' },
+		{ "log-filename", required_argument, 0, 'F' },
 		{ "interface", required_argument, 0, 'i' },
 		{ "vlan", required_argument, 0, 'v' },
 		{ "dhcp_xid", required_argument, 0, 'x' },
@@ -143,7 +145,7 @@ int main(int argc, char *argv[])
 
 	/*getopt routine to get command line arguments*/
 	while(get_tmp < argc) {
-		get_cmd  = getopt_long(argc, argv, "m:Ri:v:t:bfVrpansu::T:P:g:S:I:o:k:L:h:d:",\
+		get_cmd  = getopt_long(argc, argv, "m:Ri:v:t:bfVrpansu::T:P:g:S:I:o:k:L:h:d:F:",\
 				long_options, &option_index);
 		if(get_cmd == -1 ) {
 			break;
@@ -179,6 +181,15 @@ int main(int argc, char *argv[])
 
 					dhmac_flag = 1;
 				}
+				break;
+
+			case 'F':
+				if (strlen(optarg) > sizeof(dhmac_fname) - 1) {
+					fprintf(stderr, "-F filename given is too long\n");
+					exit(2);
+				}
+				strcpy(dhmac_fname, optarg);
+				dhmac_fname_flag = 1;
 				break;
 
 			case 'i':
@@ -332,11 +343,8 @@ int main(int argc, char *argv[])
 		exit(2);
 	}
 
-	if (!dhmac_fname_flag) {
-		sprintf(dhmac_fname, "%02X:%02X:%02X:%02X:%02X:%02X",
-				dhmac[0], dhmac[1], dhmac[2], dhmac[3],
-				dhmac[4], dhmac[5]);
-	}
+	if (!dhmac_fname_flag)
+		sprintf(dhmac_fname, ETH_F_FMT, ETH_F_ARG(dhmac));
 
 	iface = if_nametoindex(iface_name);
 	if(iface == 0) {
