@@ -155,14 +155,13 @@ int main(int argc, char *argv[])
 				{
 					u_char aux_dhmac[ETHER_ADDR_LEN + 1];
 
-					if(strlen(optarg) > 18) {
+					if(strlen(optarg) != 18
+							|| sscanf(optarg, ETH_F_FMT, ETH_F_PARG(aux_dhmac)) != 6
+					  )
+					{
 						fprintf(stderr, "Invalid mac address\n");
 						exit(2);
 					}
-					sscanf((char *)optarg, "%2X:%2X:%2X:%2X:%2X:%2X",
-							(u_int32_t *) &aux_dhmac[0], (u_int32_t *) &aux_dhmac[1],
-							(u_int32_t *) &aux_dhmac[2], (u_int32_t *) &aux_dhmac[3],
-							(u_int32_t *) &aux_dhmac[4], (u_int32_t *) &aux_dhmac[5]);
 					memcpy(dhmac, aux_dhmac, sizeof(dhmac));
 					dhmac_flag = 1;
 				}
