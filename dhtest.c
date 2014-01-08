@@ -55,7 +55,6 @@ char *server_addr = "255.255.255.255";
 
 struct dhcpv4_hdr *dhcph_g = { 0 };
 
-u_int8_t *dhopt_pointer_g = { 0 };
 u_int8_t verbose = 0;
 u_int8_t dhcp_release_flag = 0;
 u_int8_t padding_flag = 0;

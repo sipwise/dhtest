@@ -23,6 +23,7 @@ struct iphdr *iph_g = { 0 };
 struct udphdr *uh_g = { 0 };
 static struct arp_hdr *arp_hg;
 static struct icmp_hdr *icmp_hg;
+static unsigned char *dhopt_pointer_g;
 
 /* DHCP packet, option buffer and size of option buffer */
 static unsigned char dhcp_packet_send[1518];
@@ -35,6 +36,15 @@ static u_char arp_icmp_packet[1514] = { 0 };
 static u_char arp_icmp_reply[1514] = { 0 };
 static u_int16_t icmp_len = 0;
 static int have_set_promisc;
+static unsigned int lease_time;
+
+
+
+
+static void read_options(int len);
+static int check_packet(int pkt_type, int len);
+static int map_all_layer_ptr(int pkt_type);
+
 
 
 /*
@@ -264,7 +274,7 @@ int recv_packet(int pkt_type)
 		if (ret < 0)
 			return timeout_rv;
 
-		chk_pkt_state = check_packet(pkt_type);
+		chk_pkt_state = check_packet(pkt_type, ret);
 
 		switch (chk_pkt_state) {
 			case DHCP_OFFR_RCVD:
@@ -627,8 +637,6 @@ int build_packet(int pkt_type)
 {
 	bzero(arp_icmp_reply, sizeof(arp_icmp_reply));
 	if(pkt_type == ARP_SEND) {
-		map_all_layer_ptr(ARP_MAP);
-
 		struct vlan_eth_hdr *vhdr = (struct vlan_eth_hdr *)arp_icmp_reply;
 		memcpy(vhdr->vlan_dhost, vlan_hg->vlan_shost, ETHER_ADDR_LEN);
 		memcpy(vhdr->vlan_shost, dhmac, ETHER_ADDR_LEN);
@@ -648,8 +656,6 @@ int build_packet(int pkt_type)
 		memcpy(arph->target_mac, arp_hg->sender_mac, ETHER_ADDR_LEN);
 		memcpy(arph->target_ip, arp_hg->sender_ip, IP_ADDR_LEN);
 	} else if(ICMP_SEND) {
-		map_all_layer_ptr(ICMP_MAP);
-
 		struct vlan_eth_hdr *vhdr = (struct vlan_eth_hdr *)arp_icmp_reply;
 		memcpy(vhdr->vlan_dhost, vlan_hg->vlan_shost, ETHER_ADDR_LEN);
 		memcpy(vhdr->vlan_shost, dhmac, ETHER_ADDR_LEN);
@@ -691,14 +697,24 @@ int build_packet(int pkt_type)
  * Checks whether received packet is DHCP offer/ACK/NACK/ARP/ICMP
  * and retunrs the received packet type
  */
-int check_packet(int pkt_type) 
+static int check_packet(int pkt_type, int len)
 {
+	int ret;
+
+	if (len < 40)
+		return UNKNOWN_PACKET;
+
 	if(pkt_type == DHCP_MSGOFFER || pkt_type == DHCP_MSGACK) {
-		map_all_layer_ptr(pkt_type);
+		if (map_all_layer_ptr(pkt_type))
+			return UNKNOWN_PACKET;
+
 		if (vlan) {
 			if (ntohs(vlan_hg->vlan_priority_c_vid) != vlan || ntohs(vlan_hg->vlan_tpi) != ETHERTYPE_VLAN)
 				return UNKNOWN_PACKET;
 		}
+
+		if (dhopt_pointer_g > dhcp_packet_recv + len)
+			return UNKNOWN_PACKET;
 
 		if (iph_g->protocol != 17 || uh_g->source != htons(port) || uh_g->dest != htons(port + 1))
 			return UNKNOWN_PACKET;
@@ -706,38 +722,58 @@ int check_packet(int pkt_type)
 			return UNKNOWN_PACKET;
 
 		if(*(dhopt_pointer_g + 2) == DHCP_MSGOFFER)
-			return DHCP_OFFR_RCVD;
-		if(*(dhopt_pointer_g + 2) == DHCP_MSGACK)
-			return DHCP_ACK_RCVD;
-		if(*(dhopt_pointer_g + 2) == DHCP_MSGNACK)
-			return DHCP_NAK_RCVD;
+			ret = DHCP_OFFR_RCVD;
+		else if(*(dhopt_pointer_g + 2) == DHCP_MSGACK)
+			ret = DHCP_ACK_RCVD;
+		else if(*(dhopt_pointer_g + 2) == DHCP_MSGNACK)
+			ret = DHCP_NAK_RCVD;
+		else
+			return UNKNOWN_PACKET;
 
-		return UNKNOWN_PACKET;
+		read_options(len);
+
+		return ret;
 
 	} else if(pkt_type == ARP_ICMP_RCV) {
-		map_all_layer_ptr(ARP_MAP); 
-		if(!vlan) {
+		if (map_all_layer_ptr(ARP_MAP))
+			return UNKNOWN_PACKET;
 
-			if((ntohs(arp_hg->ar_op)) == ARPOP_REQUEST && htonl(ip_address) == arp_hg->target_ip32) {
-				return ARP_RCVD;
-			}
-		} else if(vlan && ntohs(vlan) == vlan_hg->vlan_priority_c_vid) {
-			if((ntohs(arp_hg->ar_op)) == ARPOP_REQUEST && htonl(ip_address) == arp_hg->target_ip32) {
-				if (!quiet)
-					printf("Arp request received\n"); 
-				return ARP_RCVD;
-			}
+		if(!vlan && vlan_hg->vlan_tpi != htons(ETHERTYPE_ARP))
+			goto not_arp;
+		if (vlan && (ntohs(vlan_hg->vlan_priority_c_vid) != vlan
+					|| vlan_hg->vlan_len != htons(ETHERTYPE_ARP)))
+			goto not_arp;
+
+		if ((unsigned char *) arp_hg + sizeof(*arp_hg) > arp_icmp_packet + len)
+			return UNKNOWN_PACKET;
+
+		if((ntohs(arp_hg->ar_op)) == ARPOP_REQUEST && htonl(ip_address) == arp_hg->target_ip32) {
+			if (!quiet)
+				printf("Arp request received\n");
+			return ARP_RCVD;
 		}
-		map_all_layer_ptr(ICMP_MAP);
-		if(!vlan) {
-			if((ntohs(vlan_hg->vlan_tpi)) == ETHERTYPE_IP && iph_g->protocol == 1 && ip_address == ntohl(iph_g->daddr) && icmp_hg->icmp_type == ICMP_ECHO) {
-				return ICMP_RCVD;
-			}
-		} else if(vlan && ntohs(vlan) == vlan_hg->vlan_priority_c_vid) {
-			if((ntohs(vlan_hg->vlan_len)) == ETHERTYPE_IP && iph_g->protocol == 1 && ip_address == ntohl(iph_g->daddr) && icmp_hg->icmp_type == ICMP_ECHO) {
-				return ICMP_RCVD;
-			}
-		}
+		return UNKNOWN_PACKET;
+
+not_arp:
+		if (map_all_layer_ptr(ICMP_MAP))
+			return UNKNOWN_PACKET;
+
+		if(!vlan && vlan_hg->vlan_tpi != htons(ETHERTYPE_IP))
+			goto not_icmp;
+		if (vlan && (ntohs(vlan_hg->vlan_priority_c_vid) != vlan
+					|| vlan_hg->vlan_len != htons(ETHERTYPE_IP)))
+			goto not_icmp;
+
+		if ((unsigned char *) icmp_hg + sizeof(*icmp_hg) > arp_icmp_packet + len)
+			return -1;
+
+		if (iph_g->protocol != 1)
+			goto not_icmp;
+
+		if(ip_address == ntohl(iph_g->daddr) && icmp_hg->icmp_type == ICMP_ECHO)
+			return ICMP_RCVD;
+
+not_icmp:
 		return UNKNOWN_PACKET;
 	}
 	return 0;
@@ -749,17 +785,31 @@ int check_packet(int pkt_type)
  */
 int set_serv_id_opt50()
 {
-	map_all_layer_ptr(DHCP_MSGOFFER);
-
 	option50_ip = dhcph_g->dhcp_yip;
 
-	while(*(dhopt_pointer_g) != DHCP_END) {
-		if(*(dhopt_pointer_g) == DHCP_SERVIDENT) {
-			memcpy(&server_id, (u_int32_t *)(dhopt_pointer_g + 2), 4);
-		}
-		dhopt_pointer_g = dhopt_pointer_g + *(dhopt_pointer_g + 1) + 2;
-	}
 	return 0;
+}
+
+static void read_options(int len) {
+	unsigned char *p = dhopt_pointer_g,
+		      *end = dhcp_packet_recv + len;
+
+	while(*(p) != DHCP_END && p < end) {
+		if ((p + *(p + 1) + 2) > end)
+			break;
+
+		switch(*(p)) {
+			case DHCP_SERVIDENT:
+				server_id = *(u_int32_t *)(p + 2);
+				break;
+
+			case DHCP_LEASETIME:
+				lease_time = ntohl(*(u_int32_t *)(p + 2));
+				break;
+		}
+
+		p = p + *(p + 1) + 2;
+	}
 }
 
 /*
@@ -768,9 +818,9 @@ int set_serv_id_opt50()
 int print_dhinfo(int pkt_type) 
 {
 	u_int16_t tmp;
-	if(pkt_type == DHCP_MSGOFFER) {
-		map_all_layer_ptr(DHCP_MSGOFFER);
+	unsigned char *p;
 
+	if(pkt_type == DHCP_MSGOFFER) {
 		printf("\nDHCP offer details\n");
 		printf("----------------------------------------------------------\n");
 		printf("DHCP offered IP from server - %s\n", get_ip_str(dhcph_g->dhcp_yip));
@@ -780,8 +830,6 @@ int print_dhinfo(int pkt_type)
 			printf("DHCP Relay agent IP - %s\n", get_ip_str(dhcph_g->dhcp_gip));
 		}
 	} else if( pkt_type == DHCP_MSGACK) {
-		map_all_layer_ptr(DHCP_MSGACK);
-
 		printf("\nDHCP ack details\n");
 		printf("----------------------------------------------------------\n");
 		printf("DHCP offered IP from server - %s\n", get_ip_str(dhcph_g->dhcp_yip));
@@ -792,52 +840,53 @@ int print_dhinfo(int pkt_type)
 		}
 	}
 
-	while(*(dhopt_pointer_g) != DHCP_END) {
+	p = dhopt_pointer_g;
+	while(*(p) != DHCP_END) {
 
-		switch(*(dhopt_pointer_g)) {
+		switch(*(p)) {
 			case DHCP_SERVIDENT:
-				printf("DHCP server  - %s\n", get_ip_str(*(u_int32_t *)(dhopt_pointer_g + 2)));
+				printf("DHCP server  - %s\n", get_ip_str(*(u_int32_t *)(p + 2)));
 				break;
 
 			case DHCP_LEASETIME: 
 				printf("Lease time - %d Days %d Hours %d Minutes\n", \
-						(ntohl(*(u_int32_t *)(dhopt_pointer_g + 2))) / (3600 * 24), \
-						((ntohl(*(u_int32_t *)(dhopt_pointer_g + 2))) % (3600 * 24)) / 3600, \
-						(((ntohl(*(u_int32_t *)(dhopt_pointer_g + 2))) % (3600 * 24)) % 3600) / 60); 
+						(ntohl(*(u_int32_t *)(p + 2))) / (3600 * 24), \
+						((ntohl(*(u_int32_t *)(p + 2))) % (3600 * 24)) / 3600, \
+						(((ntohl(*(u_int32_t *)(p + 2))) % (3600 * 24)) % 3600) / 60);
 				break;
 
 			case DHCP_SUBNETMASK:
-				printf("Subnet mask - %s\n", get_ip_str(*(u_int32_t *)(dhopt_pointer_g + 2)));
+				printf("Subnet mask - %s\n", get_ip_str(*(u_int32_t *)(p + 2)));
 				break;
 
 			case DHCP_ROUTER:
-				for(tmp = 0; tmp < (*(dhopt_pointer_g + 1) / 4); tmp++) {
-					printf("Router/gateway - %s\n", get_ip_str(*(u_int32_t *)(dhopt_pointer_g + 2 + (tmp * 4))));
+				for(tmp = 0; tmp < (*(p + 1) / 4); tmp++) {
+					printf("Router/gateway - %s\n", get_ip_str(*(u_int32_t *)(p + 2 + (tmp * 4))));
 				}
 				break;
 
 			case DHCP_DNS:
-				for(tmp = 0; tmp < ((*(dhopt_pointer_g + 1)) / 4); tmp++) {
-					printf("DNS server - %s\n", get_ip_str(*(u_int32_t *)(dhopt_pointer_g + 2 + (tmp * 4))));
+				for(tmp = 0; tmp < ((*(p + 1)) / 4); tmp++) {
+					printf("DNS server - %s\n", get_ip_str(*(u_int32_t *)(p + 2 + (tmp * 4))));
 				}
 				break;
 
 			case DHCP_FQDN:
 				{
 					/* Minus 3 beacause 3 bytes are used to flags, rcode1 and rcode2 */
-					u_int32_t size = (u_int32_t)*(dhopt_pointer_g + 1) - 3;
+					u_int32_t size = (u_int32_t)*(p + 1) - 3;
 					/* Plus 2 to add string terminator */
 					u_char fqdn_client_name[size + 1];
 
 					/* Plus 5 to reach the beginning of the string */
-					memcpy(fqdn_client_name, dhopt_pointer_g + 5, size);
+					memcpy(fqdn_client_name, p + 5, size);
 					fqdn_client_name[size] = '\0';
 
 					printf("FQDN Client name - %s\n", fqdn_client_name);
 				}
 		}
 
-		dhopt_pointer_g = dhopt_pointer_g + *(dhopt_pointer_g + 1) + 2;
+		p = p + *(p + 1) + 2;
 	}
 
 	printf("----------------------------------------------------------\n\n");
@@ -847,7 +896,7 @@ int print_dhinfo(int pkt_type)
 /*
  * Function maps all pointers on OFFER/ACK/ARP/ICMP packet
  */
-int map_all_layer_ptr(int pkt_type)
+static int map_all_layer_ptr(int pkt_type)
 {
 	switch (pkt_type) {
 		case DHCP_MSGOFFER:

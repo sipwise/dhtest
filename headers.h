@@ -39,8 +39,6 @@ int build_optioneof(void);		/* End of option */
 int build_dhpacket(int pkt_type);	/* Build DHCP disc, req packets  */
 int build_packet(int pkt_type); /* Builds ARP and ICMP reply packets */
 int print_buff(u_int8_t *buff, int size);/* Debug routine */
-int map_all_layer_ptr(int pkt_type);	/* maps all layer pointer on DHCP packet */
-int check_packet(int pkt_type);	/* Checks the packet for DHCP offer & ack */
 int print_dhinfo(int pkt_type);	/* Prints DHCP offer & ack informations */
 int log_dhinfo(void);		/* Logs DHCP IP info to log file */
 int get_dhinfo(void);		/* Reads log file for mac, ip, serv_ip info */
@@ -331,7 +329,6 @@ extern char *giaddr;
 extern char *server_addr;
 
 extern struct dhcpv4_hdr *dhcph_g;
-extern u_int8_t *dhopt_pointer_g;
 
 extern u_char dhmac[ETHER_ADDR_LEN];
 extern u_char dmac[ETHER_ADDR_LEN];
