@@ -9,8 +9,9 @@
 #define HEADERS_H
 
 
-#define ETH_F_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
+#define ETH_F_FMT "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx"
 #define ETH_F_ARG(x) (x)[0], (x)[1], (x)[2], (x)[3], (x)[4], (x)[5]
+#define ETH_F_PARG(x) &(x)[0], &(x)[1], &(x)[2], &(x)[3], &(x)[4], &(x)[5]
 
 /*
  *  Functions used in functions.c

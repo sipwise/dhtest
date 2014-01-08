@@ -197,20 +197,17 @@ int send_packet(int pkt_type)
 		if(pkt_type == DHCP_MSGDISCOVER) {
 			if (!nagios_flag) {
 				printf("DHCP discover sent\t - ");
-				printf("Client MAC : %02x:%02x:%02x:%02x:%02x:%02x\n", \
-					dhmac[0], dhmac[1], dhmac[2], dhmac[3], dhmac[4], dhmac[5]);
+				printf("Client MAC : " ETH_F_FMT "\n", ETH_F_ARG(dhmac));
 			}
 		} else if (pkt_type == DHCP_MSGREQUEST) {
 			if (!nagios_flag) {
 				printf("DHCP request sent\t - ");
-				printf("Client MAC : %02x:%02x:%02x:%02x:%02x:%02x\n", \
-					dhmac[0], dhmac[1], dhmac[2], dhmac[3], dhmac[4], dhmac[5]); 
+				printf("Client MAC : " ETH_F_FMT "\n", ETH_F_ARG(dhmac));
 			}
 		} else if (pkt_type == DHCP_MSGRELEASE) { 
 			if (!nagios_flag) {
 				printf("DHCP release sent\t - ");
-				printf("Client MAC : %02x:%02x:%02x:%02x:%02x:%02x\n", \
-					dhmac[0], dhmac[1], dhmac[2], dhmac[3], dhmac[4], dhmac[5]); 
+				printf("Client MAC : " ETH_F_FMT "\n", ETH_F_ARG(dhmac));
 			}
 		}
 	}
@@ -929,9 +926,8 @@ int get_dhinfo()
 		return ERR_FILE_OPEN;
 	}
 	fscanf(dh_file, "Client_mac: %s\nAcquired_ip: %s\nServer_id: %s\n\
-			Host_mac: %2X:%2X:%2X:%2X:%2X:%2X\nIP_listen: %s Pid: %d\n", mac_tmp, acq_ip_tmp, serv_id_tmp, \
-			(u_int32_t *) &aux_dmac[0], (u_int32_t *) &aux_dmac[1], (u_int32_t *) &aux_dmac[2],
-			(u_int32_t *) &aux_dmac[3], (u_int32_t *) &aux_dmac[4], (u_int32_t *) &aux_dmac[5],
+			Host_mac: " ETH_F_FMT "\nIP_listen: %s Pid: %d\n", mac_tmp, acq_ip_tmp, serv_id_tmp,
+			ETH_F_PARG(aux_dmac),
 			ip_listen_tmp, &dh_pid);
 	memcpy(dmac, aux_dmac, sizeof(dmac));
 	option50_ip = inet_addr(acq_ip_tmp);
