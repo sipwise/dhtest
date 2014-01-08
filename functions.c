@@ -106,7 +106,7 @@ static int set_clear_promisc(int op)
 
 error:
 	if (nagios_flag)
-		fprintf(stdout, "CRITICAL: Error setting promisc.");
+		fprintf(stderr, "CRITICAL: Error setting promisc.");
 	else
 		perror("Error on setting promisc");
 	exit(2);
@@ -136,7 +136,7 @@ u_int32_t get_interface_address()
 
 	if(status < 0) {
 		if (nagios_flag)
-			fprintf(stdout, "CRITICAL: Error getting interface address.");
+			fprintf(stderr, "CRITICAL: Error getting interface address.");
 		else
 			perror("Error getting interface address.");
 		exit(2);
@@ -187,7 +187,7 @@ int send_packet(int pkt_type)
 
 	if(ret < 0) {
 		if (nagios_flag)
-			fprintf(stdout, "CRITICAL: Packet send failure.");
+			fprintf(stderr, "CRITICAL: Packet send failure.");
 		else
 			perror("Packet send failure");
 		close(sock_packet);
@@ -196,20 +196,20 @@ int send_packet(int pkt_type)
 	} else {
 		if(pkt_type == DHCP_MSGDISCOVER) {
 			if (!nagios_flag) {
-				fprintf(stdout, "DHCP discover sent\t - ");
-				fprintf(stdout, "Client MAC : %02x:%02x:%02x:%02x:%02x:%02x\n", \
+				printf("DHCP discover sent\t - ");
+				printf("Client MAC : %02x:%02x:%02x:%02x:%02x:%02x\n", \
 					dhmac[0], dhmac[1], dhmac[2], dhmac[3], dhmac[4], dhmac[5]);
 			}
 		} else if (pkt_type == DHCP_MSGREQUEST) {
 			if (!nagios_flag) {
-				fprintf(stdout, "DHCP request sent\t - ");
-				fprintf(stdout, "Client MAC : %02x:%02x:%02x:%02x:%02x:%02x\n", \
+				printf("DHCP request sent\t - ");
+				printf("Client MAC : %02x:%02x:%02x:%02x:%02x:%02x\n", \
 					dhmac[0], dhmac[1], dhmac[2], dhmac[3], dhmac[4], dhmac[5]); 
 			}
 		} else if (pkt_type == DHCP_MSGRELEASE) { 
 			if (!nagios_flag) {
-				fprintf(stdout, "DHCP release sent\t - ");
-				fprintf(stdout, "Client MAC : %02x:%02x:%02x:%02x:%02x:%02x\n", \
+				printf("DHCP release sent\t - ");
+				printf("Client MAC : %02x:%02x:%02x:%02x:%02x:%02x\n", \
 					dhmac[0], dhmac[1], dhmac[2], dhmac[3], dhmac[4], dhmac[5]); 
 			}
 		}
@@ -294,14 +294,14 @@ int recv_packet(int pkt_type)
 int print_buff(u_int8_t *buff, int size)
 {
 	int tmp;
-	fprintf(stdout, "\n---------Buffer data-------\n");
+	printf("\n---------Buffer data-------\n");
 	for(tmp = 0; tmp < size; tmp++) {
-		fprintf(stdout, "%02X ", buff[tmp]);
+		printf("%02X ", buff[tmp]);
 		if((tmp % 16) == 0 && tmp != 0) {
-			fprintf(stdout, "\n");
+			printf("\n");
 		}
 	}
-	fprintf(stdout, "\n");
+	printf("\n");
 	return 0;
 }
 
@@ -735,7 +735,7 @@ int check_packet(int pkt_type)
 			}
 		} else if(vlan && ntohs(vlan) == vlan_hg->vlan_priority_c_vid) {
 			if((ntohs(arp_hg->ar_op)) == ARPOP_REQUEST && htonl(ip_address) == arp_hg->target_ip32) {
-				fprintf(stdout, "Arp request received\n"); 
+				printf("Arp request received\n"); 
 				return ARP_RCVD;
 			}
 		}
@@ -782,24 +782,24 @@ int print_dhinfo(int pkt_type)
 	if(pkt_type == DHCP_MSGOFFER) {
 		map_all_layer_ptr(DHCP_MSGOFFER);
 
-		fprintf(stdout, "\nDHCP offer details\n");
-		fprintf(stdout, "----------------------------------------------------------\n");
-		fprintf(stdout, "DHCP offered IP from server - %s\n", get_ip_str(dhcph_g->dhcp_yip));
-		fprintf(stdout, "Next server IP(Probably TFTP server) - %s\n", get_ip_str(dhcph_g->dhcp_sip));
-		fprintf(stdout, "Boot File Name (Probably used in PXE) - %s\n", dhcph_g->dhcp_file);
+		printf("\nDHCP offer details\n");
+		printf("----------------------------------------------------------\n");
+		printf("DHCP offered IP from server - %s\n", get_ip_str(dhcph_g->dhcp_yip));
+		printf("Next server IP(Probably TFTP server) - %s\n", get_ip_str(dhcph_g->dhcp_sip));
+		printf("Boot File Name (Probably used in PXE) - %s\n", dhcph_g->dhcp_file);
 		if(dhcph_g->dhcp_gip) {
-			fprintf(stdout, "DHCP Relay agent IP - %s\n", get_ip_str(dhcph_g->dhcp_gip));
+			printf("DHCP Relay agent IP - %s\n", get_ip_str(dhcph_g->dhcp_gip));
 		}
 	} else if( pkt_type == DHCP_MSGACK) {
 		map_all_layer_ptr(DHCP_MSGACK);
 
-		fprintf(stdout, "\nDHCP ack details\n");
-		fprintf(stdout, "----------------------------------------------------------\n");
-		fprintf(stdout, "DHCP offered IP from server - %s\n", get_ip_str(dhcph_g->dhcp_yip));
-		fprintf(stdout, "Next server IP(Probably TFTP server) - %s\n", get_ip_str(dhcph_g->dhcp_sip));
-		fprintf(stdout, "Boot File Name (Probably used in PXE) - %s\n", dhcph_g->dhcp_file);
+		printf("\nDHCP ack details\n");
+		printf("----------------------------------------------------------\n");
+		printf("DHCP offered IP from server - %s\n", get_ip_str(dhcph_g->dhcp_yip));
+		printf("Next server IP(Probably TFTP server) - %s\n", get_ip_str(dhcph_g->dhcp_sip));
+		printf("Boot File Name (Probably used in PXE) - %s\n", dhcph_g->dhcp_file);
 		if(dhcph_g->dhcp_gip) {
-			fprintf(stdout, "DHCP Relay agent IP - %s\n", get_ip_str(dhcph_g->dhcp_gip));
+			printf("DHCP Relay agent IP - %s\n", get_ip_str(dhcph_g->dhcp_gip));
 		}
 	}
 
@@ -807,29 +807,29 @@ int print_dhinfo(int pkt_type)
 
 		switch(*(dhopt_pointer_g)) {
 			case DHCP_SERVIDENT:
-				fprintf(stdout, "DHCP server  - %s\n", get_ip_str(*(u_int32_t *)(dhopt_pointer_g + 2)));
+				printf("DHCP server  - %s\n", get_ip_str(*(u_int32_t *)(dhopt_pointer_g + 2)));
 				break;
 
 			case DHCP_LEASETIME: 
-				fprintf(stdout, "Lease time - %d Days %d Hours %d Minutes\n", \
+				printf("Lease time - %d Days %d Hours %d Minutes\n", \
 						(ntohl(*(u_int32_t *)(dhopt_pointer_g + 2))) / (3600 * 24), \
 						((ntohl(*(u_int32_t *)(dhopt_pointer_g + 2))) % (3600 * 24)) / 3600, \
 						(((ntohl(*(u_int32_t *)(dhopt_pointer_g + 2))) % (3600 * 24)) % 3600) / 60); 
 				break;
 
 			case DHCP_SUBNETMASK:
-				fprintf(stdout, "Subnet mask - %s\n", get_ip_str(*(u_int32_t *)(dhopt_pointer_g + 2)));
+				printf("Subnet mask - %s\n", get_ip_str(*(u_int32_t *)(dhopt_pointer_g + 2)));
 				break;
 
 			case DHCP_ROUTER:
 				for(tmp = 0; tmp < (*(dhopt_pointer_g + 1) / 4); tmp++) {
-					fprintf(stdout, "Router/gateway - %s\n", get_ip_str(*(u_int32_t *)(dhopt_pointer_g + 2 + (tmp * 4))));
+					printf("Router/gateway - %s\n", get_ip_str(*(u_int32_t *)(dhopt_pointer_g + 2 + (tmp * 4))));
 				}
 				break;
 
 			case DHCP_DNS:
 				for(tmp = 0; tmp < ((*(dhopt_pointer_g + 1)) / 4); tmp++) {
-					fprintf(stdout, "DNS server - %s\n", get_ip_str(*(u_int32_t *)(dhopt_pointer_g + 2 + (tmp * 4))));
+					printf("DNS server - %s\n", get_ip_str(*(u_int32_t *)(dhopt_pointer_g + 2 + (tmp * 4))));
 				}
 				break;
 
@@ -844,14 +844,14 @@ int print_dhinfo(int pkt_type)
 					memcpy(fqdn_client_name, dhopt_pointer_g + 5, size);
 					fqdn_client_name[size] = '\0';
 
-					fprintf(stdout, "FQDN Client name - %s\n", fqdn_client_name);
+					printf("FQDN Client name - %s\n", fqdn_client_name);
 				}
 		}
 
 		dhopt_pointer_g = dhopt_pointer_g + *(dhopt_pointer_g + 1) + 2;
 	}
 
-	fprintf(stdout, "----------------------------------------------------------\n\n");
+	printf("----------------------------------------------------------\n\n");
 	return 0;
 }
 
@@ -895,7 +895,7 @@ int log_dhinfo()
 	dh_file = fopen(dhmac_fname, "w");
 	if(dh_file == NULL) {
 		if (nagios_flag)
-			fprintf(stdout, "CRITICAL: Error on opening file.");
+			fprintf(stderr, "CRITICAL: Error on opening file.");
 		else
 			perror("Error on opening file.");
 		exit(2);

@@ -70,34 +70,34 @@ u_int32_t listen_timeout = 3600;
 /* Help routine for the command line interface */
 void print_help(char *cmd)
 {
-	fprintf(stdout, "Usage: %s [ options ]\n", cmd);
-	fprintf(stdout, "  -m\t\t\t\t\t# MAC_address\n");
-	fprintf(stdout, "  -R, --random-mac\t\t\t# Use a randomly generated MAC address\n");
-	fprintf(stdout, "  -r, --release\t\t\t\t# Releases obtained DHCP IP for corresponding MAC\n");
-	fprintf(stdout, "  -F, --log-filename\t\t\t# Log/status file, defaults to './$MAC'\n");
-	fprintf(stdout, "  -L, --option51-lease_time [ Lease_time ] # Option 51. Requested lease time in secondes\n");
-	fprintf(stdout, "  -I, --option50-ip\t[ IP_address ]\t# Option 50 IP address on DHCP discover\n");
-	fprintf(stdout, "  -o, --option60-vci\t[ VCI_string ]\t# Vendor Class Idendifier string\n");
-	fprintf(stdout, "  -h, --option12-hostname [ hostname_string ] # Client hostname string\n");
-	fprintf(stdout, "  -v, --vlan\t\t[ vlan_id ]\t# VLAN ID. Range(1 - 4094)\n");
-	/* fprintf(stdout, "  -x, --dhcp_xid\t[ dhcp_xid ]\n"); */
-	fprintf(stdout, "  -t, --tos\t\t[ TOS_value ]\t# IP header TOS value\n");
-	fprintf(stdout, "  -i, --interface\t[ interface ]\t# Interface to use. Default eth0\n");
-	fprintf(stdout, "  -T, --timeout\t\t[ cmd_timeout ]\t# Command returns within specified timout in seconds\n");
-	fprintf(stdout, "  -b, --bind-ip\t\t\t\t# Listens on the obtained IP. Supported protocols - ARP and ICMP\n");
-	fprintf(stdout, "  -k, --bind-timeout\t[ timeout ]\t# Listen timout in seconds. Default 3600 seconds\n");
-	fprintf(stdout, "  -f, --bcast_flag\t\t\t# Sets broadcast flag on DHCP discover and request\n");
-	fprintf(stdout, "  -d, --fqdn-domain-name   [ fqdn ]\t# FQDN domain name to use\n");
-	fprintf(stdout, "  -n, --fqdn-server-not-update\t\t# Sets FQDN server not update flag\n");
-	fprintf(stdout, "  -s, --fqdn-server-update-a\t\t# Sets FQDN server update flag\n");
-	fprintf(stdout, "  -p, --padding\t\t\t\t# Add padding to packet to be at least 300 bytes\n");
-	fprintf(stdout, "  -P, --port\t\t[ port ]\t# Use port instead of 67\n");
-	fprintf(stdout, "  -g, --giaddr\t\t[ giaddr ]\t# Use giaddr instead of 0.0.0.0\n");
-	fprintf(stdout, "  -u<ip>, --unicast=<ip>\t\t# Unicast request, IP is optional. If not specified, the interface address will be used. \n");
-	fprintf(stdout, "  -a, --nagios\t\t\t\t# Nagios output format. \n");
-	fprintf(stdout, "  -S, --server\t\t[ address ]\t# Use server address instead of 255.255.255.255\n");
-	fprintf(stdout, "  -V, --verbose\t\t\t\t# Prints DHCP offer and ack details\n");
-	fprintf(stdout, "  dhtest version 1.3\n");
+	printf("Usage: %s [ options ]\n", cmd);
+	printf("  -m\t\t\t\t\t# MAC_address\n");
+	printf("  -R, --random-mac\t\t\t# Use a randomly generated MAC address\n");
+	printf("  -r, --release\t\t\t\t# Releases obtained DHCP IP for corresponding MAC\n");
+	printf("  -F, --log-filename\t\t\t# Log/status file, defaults to './$MAC'\n");
+	printf("  -L, --option51-lease_time [ Lease_time ] # Option 51. Requested lease time in secondes\n");
+	printf("  -I, --option50-ip\t[ IP_address ]\t# Option 50 IP address on DHCP discover\n");
+	printf("  -o, --option60-vci\t[ VCI_string ]\t# Vendor Class Idendifier string\n");
+	printf("  -h, --option12-hostname [ hostname_string ] # Client hostname string\n");
+	printf("  -v, --vlan\t\t[ vlan_id ]\t# VLAN ID. Range(1 - 4094)\n");
+	/* printf("  -x, --dhcp_xid\t[ dhcp_xid ]\n"); */
+	printf("  -t, --tos\t\t[ TOS_value ]\t# IP header TOS value\n");
+	printf("  -i, --interface\t[ interface ]\t# Interface to use. Default eth0\n");
+	printf("  -T, --timeout\t\t[ cmd_timeout ]\t# Command returns within specified timout in seconds\n");
+	printf("  -b, --bind-ip\t\t\t\t# Listens on the obtained IP. Supported protocols - ARP and ICMP\n");
+	printf("  -k, --bind-timeout\t[ timeout ]\t# Listen timout in seconds. Default 3600 seconds\n");
+	printf("  -f, --bcast_flag\t\t\t# Sets broadcast flag on DHCP discover and request\n");
+	printf("  -d, --fqdn-domain-name   [ fqdn ]\t# FQDN domain name to use\n");
+	printf("  -n, --fqdn-server-not-update\t\t# Sets FQDN server not update flag\n");
+	printf("  -s, --fqdn-server-update-a\t\t# Sets FQDN server update flag\n");
+	printf("  -p, --padding\t\t\t\t# Add padding to packet to be at least 300 bytes\n");
+	printf("  -P, --port\t\t[ port ]\t# Use port instead of 67\n");
+	printf("  -g, --giaddr\t\t[ giaddr ]\t# Use giaddr instead of 0.0.0.0\n");
+	printf("  -u<ip>, --unicast=<ip>\t\t# Unicast request, IP is optional. If not specified, the interface address will be used. \n");
+	printf("  -a, --nagios\t\t\t\t# Nagios output format. \n");
+	printf("  -S, --server\t\t[ address ]\t# Use server address instead of 255.255.255.255\n");
+	printf("  -V, --verbose\t\t\t\t# Prints DHCP offer and ack details\n");
+	printf("  dhtest version 1.3\n");
 }
 
 
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
 					u_char aux_dhmac[ETHER_ADDR_LEN + 1];
 
 					if(strlen(optarg) > 18) {
-						fprintf(stdout, "Invalid mac address\n");
+						fprintf(stderr, "Invalid mac address\n");
 						exit(2);
 					}
 					sscanf((char *)optarg, "%2X:%2X:%2X:%2X:%2X:%2X",
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
 			case 'v':
 				if(atoi(optarg) < 1 || atoi(optarg) > 4095)
 				{
-					fprintf(stdout, "VLAN ID is not valid. Range 1 to 4095\n");
+					fprintf(stderr, "VLAN ID is not valid. Range 1 to 4095\n");
 					exit(2);
 				}
 				vlan = atoi(optarg);
@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
 
 			case 't':
 				if(atoi(optarg) >= 256 || atoi(optarg) < 0) {
-					fprintf(stdout, "Invalid TOS value\n");
+					fprintf(stderr, "Invalid TOS value\n");
 					exit(2);
 				}
 				l3_tos = atoi(optarg);
@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
 
 			case 'o':
 				if(strlen(optarg) >= 256) {
-					fprintf(stdout, "VCI string size should be less than 256\n");
+					fprintf(stderr, "VCI string size should be less than 256\n");
 					exit(2);
 				}
 				vci_flag = 1;
@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
 
 			case 'h':
 				if(strlen(optarg) >= 256) {
-					fprintf(stdout, "Hostname string size should be less than 256\n");
+					fprintf(stderr, "Hostname string size should be less than 256\n");
 					exit(2);
 				}
 				hostname_flag = 1;
@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
 
 			case 'd':
 				if(strlen(optarg) >= 253) {
-					fprintf(stdout, "FQDN domain name string size should be less than 253\n");
+					fprintf(stderr, "FQDN domain name string size should be less than 253\n");
 					exit(2);
 				}
 				fqdn_flag = 1;
@@ -281,7 +281,7 @@ int main(int argc, char *argv[])
 
 			case 'T':
 				if(atoi(optarg) < 5 || atoi(optarg) > 3600) {
-					fprintf(stdout, "Invalid timout value. Range 5 to 3600\n");
+					fprintf(stderr, "Invalid timout value. Range 5 to 3600\n");
 					exit(2);
 				}
 				timeout = atoi(optarg);
@@ -289,7 +289,7 @@ int main(int argc, char *argv[])
 
 			case 'P':
 				if(atoi(optarg) <=0 || atoi(optarg) > 65535) {
-					fprintf(stdout, "Invalid portt value. Range 1 to 65535\n");
+					fprintf(stderr, "Invalid port value. Range 1 to 65535\n");
 					exit(2);
 				}
 				port = atoi(optarg);
@@ -320,7 +320,7 @@ int main(int argc, char *argv[])
 					struct in_addr out;
 
 					if (!inet_aton(optarg, &out)) {
-						fprintf(stdout, "Invalid unicast IP address.");
+						fprintf(stderr, "Invalid unicast IP address.");
 						exit(2);
 					}
 					unicast_ip_address = out.s_addr;
@@ -348,15 +348,15 @@ int main(int argc, char *argv[])
 
 	iface = if_nametoindex(iface_name);
 	if(iface == 0) {
-		fprintf(stdout, "Interface %s does not exist\n", iface_name);
+		fprintf(stderr, "Interface %s does not exist\n", iface_name);
 		exit(2);
 	}
 	/* Opens the PF_PACKET socket */
 	if(open_socket() < 0) {
 		if (nagios_flag)
-			fprintf(stdout, "CRITICAL: Socket error.");
+			fprintf(stderr, "CRITICAL: Socket error.");
 		else
-			fprintf(stdout, "Socket error\n");
+			fprintf(stderr, "Socket error\n");
 		exit(2);
 	}
 
@@ -378,10 +378,10 @@ int main(int argc, char *argv[])
 	if(dhcp_release_flag) {
 		if(get_dhinfo() == ERR_FILE_OPEN) {
 			if (nagios_flag) {
-				fprintf(stdout, "CRITICAL: Error on opening DHCP info file.");
+				fprintf(stderr, "CRITICAL: Error on opening DHCP info file.");
 			} else {
-				fprintf(stdout, "Error on opening DHCP info file\n");
-				fprintf(stdout, "Release the DHCP IP after acquiring\n");
+				fprintf(stderr, "Error on opening DHCP info file\n");
+				fprintf(stderr, "Release the DHCP IP after acquiring\n");
 			}
 			exit(2);
 		}
@@ -438,17 +438,17 @@ int main(int argc, char *argv[])
 			time_now = time(NULL);
 			if((time_now - time_last) > timeout) {
 				if (nagios_flag)
-					fprintf(stdout, "CRITICAL: Timeout reached: DISCOVER.");
+					fprintf(stderr, "CRITICAL: Timeout reached: DISCOVER.");
 				close_socket();
 				exit(2);
 			}
 		}
 		if(dhcp_offer_state == DHCP_OFFR_RCVD) {
 			if (!nagios_flag)
-				fprintf(stdout, "DHCP offer received\t - ");
+				printf("DHCP offer received\t - ");
 			set_serv_id_opt50();
 			if (!nagios_flag)
-  				fprintf(stdout, "Offered IP : %s\n", get_ip_str(dhcph_g->dhcp_yip));
+  				printf("Offered IP : %s\n", get_ip_str(dhcph_g->dhcp_yip));
 			if(!nagios_flag && verbose) { 
 				print_dhinfo(DHCP_MSGOFFER);
 			}
@@ -484,9 +484,9 @@ int main(int argc, char *argv[])
 			time_now = time(NULL);
 			if((time_now - time_last) > timeout) {
 				if (nagios_flag)
-					fprintf(stdout, "CRITICAL: Timeout reached: REQUEST.");
+					fprintf(stderr, "CRITICAL: Timeout reached: REQUEST.");
 				else
-					fprintf(stdout, "Timeout reached. Exiting\n");
+					fprintf(stderr, "Timeout reached. Exiting\n");
 				close_socket();
 				exit(1);
 			}
@@ -494,10 +494,10 @@ int main(int argc, char *argv[])
 
 		if(dhcp_ack_state == DHCP_ACK_RCVD) {
 			if (nagios_flag) {
-				fprintf(stdout, "OK: Acquired IP: %s", get_ip_str(dhcph_g->dhcp_yip));
+				printf("OK: Acquired IP: %s", get_ip_str(dhcph_g->dhcp_yip));
 			} else {
-				fprintf(stdout, "DHCP ack received\t - ");
-				fprintf(stdout, "Acquired IP: %s\n", get_ip_str(dhcph_g->dhcp_yip));
+				printf("DHCP ack received\t - ");
+				printf("Acquired IP: %s\n", get_ip_str(dhcph_g->dhcp_yip));
 			}
 
 			/* Logs DHCP IP details to log file. This file is used for DHCP release */
@@ -507,38 +507,38 @@ int main(int argc, char *argv[])
 			}
 		} else if (dhcp_ack_state == DHCP_NAK_RCVD) {
 			if (!nagios_flag) {
-				fprintf(stdout, "DHCP nack received\t - ");
-				fprintf(stdout, "Client MAC : %02x:%02x:%02x:%02x:%02x:%02x\n", \
+				printf("DHCP nack received\t - ");
+				printf("Client MAC : %02x:%02x:%02x:%02x:%02x:%02x\n", \
 					dhmac[0], dhmac[1], dhmac[2], dhmac[3], dhmac[4], dhmac[5]); 
 			}
 		}
 	}
 	/* If IP listen flag is enabled, Listen on obtained for ARP, ICMP protocols  */
 	if(!nagios_flag && ip_listen_flag) {
-		fprintf(stdout, "\nListening on %s for ARP and ICMP protocols\n", iface_name);
-		fprintf(stdout, "IP address: %s, Listen timeout: %d seconds\n", get_ip_str(htonl(ip_address)), listen_timeout);
+		printf("\nListening on %s for ARP and ICMP protocols\n", iface_name);
+		printf("IP address: %s, Listen timeout: %d seconds\n", get_ip_str(htonl(ip_address)), listen_timeout);
 		int arp_icmp_rcv_state = 0;
 		while(arp_icmp_rcv_state != LISTEN_TIMEOUT) { 
 			arp_icmp_rcv_state = recv_packet(ARP_ICMP_RCV);
 			/* Send ARP reply if ARP request received */
 			if(arp_icmp_rcv_state == ARP_RCVD) {
 				/*if(verbose) {
-				  fprintf(stdout, "ARP request received\n");
-				  fprintf(stdout, "Sending ARP reply\n");
+				  printf("ARP request received\n");
+				  printf("Sending ARP reply\n");
 				  }*/
 				build_packet(ARP_SEND);
 				send_packet(ARP_SEND);
 			} else if(arp_icmp_rcv_state == ICMP_RCVD) {
 				/* Send ICMP reply if ICMP echo request received */
 				/*if(verbose) {
-				  fprintf(stdout, "ICMP request received\n");
-				  fprintf(stdout, "Sending ICMP reply\n");
+				  printf("ICMP request received\n");
+				  printf("Sending ICMP reply\n");
 				  }*/
 				build_packet(ICMP_SEND);
 				send_packet(ICMP_SEND);  
 			} 
 		}
-		fprintf(stdout, "Listen timout reached\n");
+		printf("Listen timout reached\n");
 	}
 	/* Clear the promiscuous mode */
 	clear_promisc();
