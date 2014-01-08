@@ -29,6 +29,7 @@ u_int16_t l4_hdr_size = 8;
 u_char dhmac[ETHER_ADDR_LEN] = { 0 };
 u_char dmac[ETHER_ADDR_LEN];
 
+int dhmac_fname_flag;
 char dhmac_fname[20];
 char *iface_name = "eth0";
 char ip_str[128];
@@ -156,7 +157,6 @@ int main(int argc, char *argv[])
 						fprintf(stdout, "Invalid mac address\n");
 						exit(2);
 					}
-					strcpy(dhmac_fname, optarg);
 					sscanf((char *)optarg, "%2X:%2X:%2X:%2X:%2X:%2X",
 							(u_int32_t *) &aux_dhmac[0], (u_int32_t *) &aux_dhmac[1],
 							(u_int32_t *) &aux_dhmac[2], (u_int32_t *) &aux_dhmac[3],
@@ -331,6 +331,13 @@ int main(int argc, char *argv[])
 		print_help(argv[0]);
 		exit(2);
 	}
+
+	if (!dhmac_fname_flag) {
+		sprintf(dhmac_fname, "%02X:%02X:%02X:%02X:%02X:%02X",
+				dhmac[0], dhmac[1], dhmac[2], dhmac[3],
+				dhmac[4], dhmac[5]);
+	}
+
 	iface = if_nametoindex(iface_name);
 	if(iface == 0) {
 		fprintf(stdout, "Interface %s does not exist\n", iface_name);
