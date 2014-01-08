@@ -1,7 +1,7 @@
 # Makefile to generate dhtest
 
-CC=gcc
-CFLAGS=-Wall -O3 -g
+CC?=gcc
+CFLAGS?=-Wall -O3 -g
 
 %.o: %.c headers.h
 	$(CC) $(CFLAGS) -o $@ -c $<
