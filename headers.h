@@ -17,25 +17,25 @@
  *  Functions used in functions.c
  */
 
-int open_socket();		/* Opens PF_PACKET socket*/
-int close_socket();		/* Close PF_PACKET socket */
-int set_promisc();
-int clear_promisc();
+int open_socket(void);		/* Opens PF_PACKET socket*/
+int close_socket(void);		/* Close PF_PACKET socket */
+int set_promisc(void);
+int clear_promisc(void);
 int send_packet(int pkt_type);	/* Sends DHCP packet socket*/
 int recv_packet(int pkt_type);	/* Receives DHCP packet on socket*/
 
-int reset_dhopt_size();		/* Resets the dhopt_size to zero */
-void init_rand();
-int set_rand_dhcp_xid();	/* Sets a random DHCP xid */
-int build_option53(int msg_type);	/* Option53: MSGTYPE. Builds option53*/
-int build_option55();		/* Requested parameters list */
-int build_option54();		/* Builds server identifier on DHCP request */
-int build_option50();		/* Option50: Rqstd IP. Builds option50*/
-int build_option51();		/* Option51: Rqstd lease time. Builds option51*/
-int build_option60_vci();	/* Vendor class identifier */
-int build_option12_hostname(); /* Hostname */
-int build_option81_fqdn(); /* FQDN */
-int build_optioneof();		/* End of option */
+int reset_dhopt_size(void);	/* Resets the dhopt_size to zero */
+void init_rand(void);
+int set_rand_dhcp_xid(void);	/* Sets a random DHCP xid */
+int build_option53(int msg_type); /* Option53: MSGTYPE. Builds option53*/
+int build_option55(void);	/* Requested parameters list */
+int build_option54(void);	/* Builds server identifier on DHCP request */
+int build_option50(void);	/* Option50: Rqstd IP. Builds option50*/
+int build_option51(void);	/* Option51: Rqstd lease time. Builds option51*/
+int build_option60_vci(void);	/* Vendor class identifier */
+int build_option12_hostname(void); /* Hostname */
+int build_option81_fqdn(void); /* FQDN */
+int build_optioneof(void);		/* End of option */
 
 int build_dhpacket(int pkt_type);	/* Build DHCP disc, req packets  */
 int build_packet(int pkt_type); /* Builds ARP and ICMP reply packets */
@@ -43,12 +43,12 @@ int print_buff(u_int8_t *buff, int size);/* Debug routine */
 int map_all_layer_ptr(int pkt_type);	/* maps all layer pointer on DHCP packet */
 int check_packet(int pkt_type);	/* Checks the packet for DHCP offer & ack */
 int print_dhinfo(int pkt_type);	/* Prints DHCP offer & ack informations */
-int log_dhinfo();		/* Logs DHCP IP info to log file */
-int get_dhinfo();		/* Reads log file for mac, ip, serv_ip info */
+int log_dhinfo(void);		/* Logs DHCP IP info to log file */
+int get_dhinfo(void);		/* Reads log file for mac, ip, serv_ip info */
 char *get_ip_str(u_int32_t ip);  /* Convert in_addr to string */
-u_int32_t get_interface_address(); /* Return the IP address of the interface. */
+u_int32_t get_interface_address(void); /* Return the IP address of the interface. */
 
-int set_serv_id_opt50();	/* Sets the server_ip and option50 ip */
+int set_serv_id_opt50(void);	/* Sets the server_ip and option50 ip */
 /*
  * Libnet defines header sizes for every builder function exported.
  */
