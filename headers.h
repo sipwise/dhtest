@@ -20,6 +20,7 @@ int send_packet(int pkt_type);	/* Sends DHCP packet socket*/
 int recv_packet(int pkt_type);	/* Receives DHCP packet on socket*/
 
 int reset_dhopt_size();		/* Resets the dhopt_size to zero */
+void init_rand();
 int set_rand_dhcp_xid();	/* Sets a random DHCP xid */
 int build_option53(int msg_type);	/* Option53: MSGTYPE. Builds option53*/
 int build_option55();		/* Requested parameters list */

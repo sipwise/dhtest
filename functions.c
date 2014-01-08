@@ -313,15 +313,17 @@ int reset_dhopt_size()
 	return 0;
 }
 
+void init_rand() {
+	srand(time(NULL) ^ (getpid() << 16));
+}
+
 /*
  * Sets a random DHCP xid
  */
 int set_rand_dhcp_xid()
 {
-	if(dhcp_xid == 0) {
-		srand(time(NULL) ^ (getpid() << 16));
-		dhcp_xid = rand() % 0xffffffff;
-	}
+	if(dhcp_xid == 0)
+		dhcp_xid = (rand() % 0xfffffff0) + 1;
 	return 0;
 }
 

@@ -70,7 +70,8 @@ u_int32_t listen_timeout = 3600;
 void print_help(char *cmd)
 {
 	fprintf(stdout, "Usage: %s [ options ]\n", cmd);
-	fprintf(stdout, "  -m mac_address\n");
+	fprintf(stdout, "  -m MAC_address\n");
+	fprintf(stdout, "  -R, --random-mac\t\t\tUse a randomly generated MAC address\n");
 	fprintf(stdout, "  -r, --release\t\t\t\t# Releases obtained DHCP IP for corresponding MAC\n");
 	fprintf(stdout, "  -L, --option51-lease_time [ Lease_time ] # Option 51. Requested lease time in secondes\n");
 	fprintf(stdout, "  -I, --option50-ip\t[ IP_address ]\t# Option 50 IP address on DHCP discover\n");
@@ -107,9 +108,12 @@ int main(int argc, char *argv[])
 		exit(2);
 	}
 
+	init_rand();
+
 	int option_index = 0;
 	static struct option long_options[] = {
 		{ "mac", required_argument, 0, 'm' },
+		{ "random-mac", no_argument, 0, 'R' },
 		{ "interface", required_argument, 0, 'i' },
 		{ "vlan", required_argument, 0, 'v' },
 		{ "dhcp_xid", required_argument, 0, 'x' },
@@ -138,7 +142,7 @@ int main(int argc, char *argv[])
 
 	/*getopt routine to get command line arguments*/
 	while(get_tmp < argc) {
-		get_cmd  = getopt_long(argc, argv, "m:i:v:t:bfVrpansu::T:P:g:S:I:o:k:L:h:d:",\
+		get_cmd  = getopt_long(argc, argv, "m:Ri:v:t:bfVrpansu::T:P:g:S:I:o:k:L:h:d:",\
 				long_options, &option_index);
 		if(get_cmd == -1 ) {
 			break;
@@ -158,6 +162,21 @@ int main(int argc, char *argv[])
 							(u_int32_t *) &aux_dhmac[2], (u_int32_t *) &aux_dhmac[3],
 							(u_int32_t *) &aux_dhmac[4], (u_int32_t *) &aux_dhmac[5]);
 					memcpy(dhmac, aux_dhmac, sizeof(dhmac));
+					dhmac_flag = 1;
+				}
+				break;
+
+			case 'R':
+				{
+					int i;
+
+					for (i = 0; i < ETHER_ADDR_LEN; i++)
+						dhmac[i] = rand() & 0xff;
+
+					/* clear multicast bit, set the L bit, clear MSB */
+					dhmac[0] &= ~0x81;
+					dhmac[0] |= 0x02;
+
 					dhmac_flag = 1;
 				}
 				break;
