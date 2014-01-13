@@ -1,1 +1,17 @@
-TODO: clarify license
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+
+Files: *
+Copyright: 2013 Saravanakumar Gandhi <notuenmc@gmail.com>
+           2013 Alan T. DeKok <aland@freeradius.org>
+           2013 blueardour <blueardour@gmail.com>
+           2013 Neuton Martins Costa <notuenmc@gmail.com>
+           2013, 2014 Richard Fuchs <rfuchs@sipwise.com>
+License: GPL-2
+
+Files: debian/*
+Copyright: 2014 Michael Prokop <mprokop@sipwise.com>
+License: GPL-2
+
+License: GPL-2
+ The full text of the GPL version 2 is distributed in
+ /usr/share/common-licenses/GPL-2 on Debian systems.
