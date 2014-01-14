@@ -56,9 +56,11 @@ struct dhcpv4_hdr *dhcph_g = { 0 };
 
 u_int8_t verbose = 0;
 u_int8_t dhcp_release_flag = 0;
+u_int8_t dhcp_request_flag = 0;
 u_int8_t padding_flag = 0;
 int timeout = 0;
-time_t time_now, time_last;
+static time_t time_now, time_last;
+time_t lease_expires_at;
 
 u_int32_t unicast_ip_address = 0;
 u_int32_t ip_address;
@@ -99,6 +101,7 @@ void print_help(char *cmd)
 	printf("  -S, --server\t\t[ address ]\t# Use server address instead of 255.255.255.255\n");
 	printf("  -V, --verbose\t\t\t\t# Prints DHCP offer and ack details\n");
 	printf("  -q, --quiet\t\t\t\t# Only print acquired IP address or errors\n");
+	printf("  -Q, --request-only\t\t\t\t# Refresh previous acquired lease by sending a request\n");
 	printf("  dhtest version 1.3\n");
 }
 
@@ -162,12 +165,13 @@ int main(int argc, char *argv[])
 		{ "server", required_argument, 0, 'S'},
 		{ "release", no_argument, 0, 'r'},
 		{ "quiet", no_argument, 0, 'q'},
+		{ "request-only", no_argument, 0, 'Q'},
 		{ 0, 0, 0, 0 }
 	};
 
 	/*getopt routine to get command line arguments*/
 	while(get_tmp < argc) {
-		get_cmd  = getopt_long(argc, argv, "m:Ri:v:t:bfVrpansu::T:P:g:S:I:o:k:L:h:d:F:q",\
+		get_cmd  = getopt_long(argc, argv, "m:Ri:v:t:bfVrpansu::T:P:g:S:I:o:k:L:h:d:F:qQ",\
 				long_options, &option_index);
 		if(get_cmd == -1 ) {
 			break;
@@ -233,6 +237,10 @@ int main(int argc, char *argv[])
 
 			case 'r':
 				dhcp_release_flag = 1;
+				break;
+
+			case 'Q':
+				dhcp_request_flag = 1;
 				break;
 
 			case 'b':
@@ -392,6 +400,8 @@ int main(int argc, char *argv[])
 	/* Sets a random DHCP xid */
 	set_rand_dhcp_xid(); 
 
+	time_now = time_last = time(NULL);
+
 	/*
 	 * If DHCP release flag is set, send DHCP release packet
 	 * and exit. get_dhinfo parses the DHCP info from log file
@@ -417,9 +427,19 @@ int main(int argc, char *argv[])
 		log_dhinfo();
 		return 0; 
 	}
-	if(timeout) {
-		time_last = time(NULL);
+
+	if (dhcp_request_flag) {
+		if(dhinfo_ret)
+			critical("Error on opening DHCP info file: %s", strerror(dhinfo_ret));
+		if (!server_id)
+			critical("Can't refresh IP without an active lease");
+		/* Clients begin to attempt to renew their leases once half the lease interval has expired. */
+		if (lease_expires_at - time_now > option51_lease_time / 2)
+			return 0;
+
+		goto request;
 	}
+
 	build_option53(DHCP_MSGDISCOVER);	/* Option53 for DHCP discover */
 	if(hostname_flag) {
 		build_option12_hostname();
@@ -467,6 +487,8 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+
+request:
 	/* Reset the dhopt buffer to build DHCP request options  */
 	reset_dhopt_size();
 	build_option53(DHCP_MSGREQUEST); 

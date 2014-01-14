@@ -6,6 +6,8 @@
 #ifndef HEADERS_H
 #include<sys/types.h>
 #include<netinet/in.h>
+#include <sys/time.h>
+#include <time.h>
 #define HEADERS_H
 
 
@@ -363,6 +365,7 @@ extern u_char ip_listen_flag;
 extern struct timeval tval_listen;
 extern u_int32_t listen_timeout;
 extern int quiet;
+extern time_t lease_expires_at;
 
 
 #endif  /* __HEADERS_H */

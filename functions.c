@@ -597,7 +597,7 @@ int build_dhpacket(int pkt_type)
 			break;
 
 		case DHCP_MSGREQUEST:
-			dhpointer->dhcp_sip = dhcph_g->dhcp_sip;
+			dhpointer->dhcp_sip = server_id;
 			break;
 	}
 	dhpointer->dhcp_gip = inet_addr(giaddr);
@@ -967,6 +967,8 @@ int get_dhinfo()
 		memcpy(dmac, ds.server_mac, sizeof(dmac));
 		if (ds.listen_pid)
 			kill(ds.listen_pid, SIGKILL); /* XXX what about promisc mode? */
+		option51_lease_time = ds.lease_time;
+		lease_expires_at = ds.acquired_at + ds.lease_time;
 	}
 
 	close(dh_file);
