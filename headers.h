@@ -282,7 +282,6 @@ struct dhcpv4_hdr
 #define DHCP_ACK_RCVD 		4
 #define DHCP_REQ_RESEND 	5
 #define DHCP_NAK_RCVD 		6
-#define ERR_FILE_OPEN		7
 #define ARP_ICMP_RCV		8
 #define ARP_RCVD		9
 #define ARP_MAP			10

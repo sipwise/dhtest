@@ -14,6 +14,7 @@
 #include <linux/if_ether.h>
 #include <linux/if_arp.h>
 #include <stdarg.h>
+#include <errno.h>
 #include "headers.h"
 
 
@@ -954,10 +955,10 @@ int get_dhinfo()
 
 	dh_file = open(dhmac_fname, O_RDONLY);
 	if(dh_file < 0)
-		return ERR_FILE_OPEN;
+		return errno;
 
 	if (read(dh_file, &ds, sizeof(ds)) != sizeof(ds))
-		return ERR_FILE_OPEN;
+		return errno;
 
 	memcpy(dhmac, ds.client_mac, sizeof(dhmac));
 	if (ds.have_ip) {

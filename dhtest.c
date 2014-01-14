@@ -116,6 +116,7 @@ static void sigcleanup(int sig) {
 int main(int argc, char *argv[])
 {
 	int get_tmp = 1, get_cmd;
+	int dhinfo_ret;
 
 	if(argc < 3) {
 		print_help(argv[0]);
@@ -365,6 +366,8 @@ int main(int argc, char *argv[])
 		exit(2);
 	}
 
+	dhinfo_ret = get_dhinfo();
+
 	if (!dhmac_fname_flag)
 		sprintf(dhmac_fname, ETH_F_FMT, ETH_F_ARG(dhmac));
 
@@ -393,8 +396,8 @@ int main(int argc, char *argv[])
 	 * and unlinks it from the system
 	 */
 	if(dhcp_release_flag) {
-		if(get_dhinfo() == ERR_FILE_OPEN)
-			critical("Error on opening DHCP info file: %m");
+		if(dhinfo_ret)
+			critical("Error on opening DHCP info file: %s", strerror(dhinfo_ret));
 		if (!server_id)
 			critical("Can't release IP without an active lease");
 		build_option53(DHCP_MSGRELEASE); /* Option53 DHCP release */
