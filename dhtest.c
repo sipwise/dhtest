@@ -108,8 +108,10 @@ static void cleanup(void) {
 }
 
 static void sigcleanup(int sig) {
+	signal(SIGABRT, SIG_DFL);
 	fprintf(stderr, "signal %i received, aborting\n", sig);
-	exit(2);
+	cleanup();
+	abort();
 }
 
 
