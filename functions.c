@@ -995,7 +995,6 @@ int get_dhinfo()
 	}
 
 	close(dh_file);
-	unlink(dhmac_fname);
 	return 0;
 }
 

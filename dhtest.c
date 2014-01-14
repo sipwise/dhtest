@@ -399,12 +399,17 @@ int main(int argc, char *argv[])
 	 */
 	if(dhcp_release_flag) {
 		if(get_dhinfo() == ERR_FILE_OPEN) {
-			if (nagios_flag) {
+			if (nagios_flag)
 				printf("CRITICAL: Error on opening DHCP info file.");
-			} else {
+			else
 				fprintf(stderr, "Error on opening DHCP info file\n");
-				fprintf(stderr, "Release the DHCP IP after acquiring\n");
-			}
+			exit(2);
+		}
+		if (!server_id) {
+			if (nagios_flag)
+				printf("CRITICAL: Can't release IP without an active lease");
+			else
+				fprintf(stderr, "Can't release IP without an active lease\n");
 			exit(2);
 		}
 		build_option53(DHCP_MSGRELEASE); /* Option53 DHCP release */
@@ -418,6 +423,8 @@ int main(int argc, char *argv[])
 		build_optioneof();		 /* End of option */
 		build_dhpacket(DHCP_MSGRELEASE); /* Build DHCP release packet */
 		send_packet(DHCP_MSGRELEASE);	 /* Send DHCP release packet */
+		/* update status file: we no longer have our IP address */
+		log_dhinfo();
 		return 0; 
 	}
 	if(timeout) {
