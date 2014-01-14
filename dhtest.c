@@ -374,13 +374,8 @@ int main(int argc, char *argv[])
 		exit(2);
 	}
 	/* Opens the PF_PACKET socket */
-	if(open_socket() < 0) {
-		if (nagios_flag)
-			printf("CRITICAL: Socket error.");
-		else
-			fprintf(stderr, "Socket error\n");
-		exit(2);
-	}
+	if(open_socket() < 0)
+		critical("Socket error: %m");
 
 	/* Sets the promiscuous mode */
 	set_promisc();
@@ -398,20 +393,10 @@ int main(int argc, char *argv[])
 	 * and unlinks it from the system
 	 */
 	if(dhcp_release_flag) {
-		if(get_dhinfo() == ERR_FILE_OPEN) {
-			if (nagios_flag)
-				printf("CRITICAL: Error on opening DHCP info file.");
-			else
-				fprintf(stderr, "Error on opening DHCP info file\n");
-			exit(2);
-		}
-		if (!server_id) {
-			if (nagios_flag)
-				printf("CRITICAL: Can't release IP without an active lease");
-			else
-				fprintf(stderr, "Can't release IP without an active lease\n");
-			exit(2);
-		}
+		if(get_dhinfo() == ERR_FILE_OPEN)
+			critical("Error on opening DHCP info file: %m");
+		if (!server_id)
+			critical("Can't release IP without an active lease");
 		build_option53(DHCP_MSGRELEASE); /* Option53 DHCP release */
 		if(hostname_flag) {
 			build_option12_hostname();
@@ -463,11 +448,8 @@ int main(int argc, char *argv[])
 
 		if(timeout) {
 			time_now = time(NULL);
-			if((time_now - time_last) > timeout) {
-				if (nagios_flag)
-					printf("CRITICAL: Timeout reached: DISCOVER.");
-				exit(2);
-			}
+			if((time_now - time_last) > timeout)
+				critical("Timeout reached: DISCOVER");
 		}
 		if(dhcp_offer_state == DHCP_OFFR_RCVD) {
 			if (!nagios_flag && !quiet)
@@ -508,13 +490,8 @@ int main(int argc, char *argv[])
 
 		if(timeout) {
 			time_now = time(NULL);
-			if((time_now - time_last) > timeout) {
-				if (nagios_flag)
-					printf("CRITICAL: Timeout reached: REQUEST.");
-				else
-					fprintf(stderr, "Timeout reached. Exiting\n");
-				exit(1);
-			}
+			if((time_now - time_last) > timeout)
+				critical("Timeout reached: REQUEST");
 		}
 
 		if(dhcp_ack_state == DHCP_ACK_RCVD) {

@@ -46,6 +46,9 @@ char *get_ip_str(u_int32_t ip);  /* Convert in_addr to string */
 u_int32_t get_interface_address(void); /* Return the IP address of the interface. */
 
 int set_serv_id_opt50(void);	/* Sets the server_ip and option50 ip */
+
+void critical(const char *fmt, ...) __attribute__ ((noreturn, format (printf, 1, 2)));
+
 /*
  * Libnet defines header sizes for every builder function exported.
  */

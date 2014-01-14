@@ -13,6 +13,7 @@
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
 #include <linux/if_arp.h>
+#include <stdarg.h>
 #include "headers.h"
 
 
@@ -56,10 +57,8 @@ static int map_all_layer_ptr(int pkt_type);
 int open_socket()
 {
 	sock_packet = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
-	if(sock_packet < 0) {
-		perror("--Error on creating the socket--");
+	if(sock_packet < 0)
 		return SOCKET_ERR;
-	} 
 	/* Set link layer parameters */
 	ll.sll_family = AF_PACKET;
 	ll.sll_protocol = htons(ETH_P_ALL);
@@ -107,11 +106,7 @@ static int set_clear_promisc(int op)
 	return 0;
 
 error:
-	if (nagios_flag)
-		printf("CRITICAL: Error setting promisc.");
-	else
-		perror("Error on setting promisc");
-	exit(2);
+	critical("Error on setting promisc: %m");
 }
 
 int set_promisc() 
@@ -136,13 +131,9 @@ u_int32_t get_interface_address()
 	ifr.ifr_addr.sa_family = AF_INET;
 	status = ioctl(sock_packet, SIOCGIFADDR, &ifr);
 
-	if(status < 0) {
-		if (nagios_flag)
-			printf("CRITICAL: Error getting interface address.");
-		else
-			perror("Error getting interface address.");
-		exit(2);
-	}
+	if(status < 0)
+		critical("Error getting interface address: %m");
+
 	return ((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr.s_addr;
 }
 
@@ -187,30 +178,23 @@ int send_packet(int pkt_type)
 			abort();
 	}
 
-	if(ret < 0) {
-		if (nagios_flag)
-			printf("CRITICAL: Packet send failure.");
-		else
-			perror("Packet send failure");
-		close(sock_packet);
-		exit(2);
-		return PACK_SEND_ERR;
-	} else {
-		if(pkt_type == DHCP_MSGDISCOVER) {
-			if (!nagios_flag && !quiet) {
-				printf("DHCP discover sent\t - ");
-				printf("Client MAC : " ETH_F_FMT "\n", ETH_F_ARG(dhmac));
-			}
-		} else if (pkt_type == DHCP_MSGREQUEST) {
-			if (!nagios_flag && !quiet) {
-				printf("DHCP request sent\t - ");
-				printf("Client MAC : " ETH_F_FMT "\n", ETH_F_ARG(dhmac));
-			}
-		} else if (pkt_type == DHCP_MSGRELEASE) { 
-			if (!nagios_flag && !quiet) {
-				printf("DHCP release sent\t - ");
-				printf("Client MAC : " ETH_F_FMT "\n", ETH_F_ARG(dhmac));
-			}
+	if(ret < 0)
+		critical("Packet send failure: %m");
+
+	if(pkt_type == DHCP_MSGDISCOVER) {
+		if (!nagios_flag && !quiet) {
+			printf("DHCP discover sent\t - ");
+			printf("Client MAC : " ETH_F_FMT "\n", ETH_F_ARG(dhmac));
+		}
+	} else if (pkt_type == DHCP_MSGREQUEST) {
+		if (!nagios_flag && !quiet) {
+			printf("DHCP request sent\t - ");
+			printf("Client MAC : " ETH_F_FMT "\n", ETH_F_ARG(dhmac));
+		}
+	} else if (pkt_type == DHCP_MSGRELEASE) { 
+		if (!nagios_flag && !quiet) {
+			printf("DHCP release sent\t - ");
+			printf("Client MAC : " ETH_F_FMT "\n", ETH_F_ARG(dhmac));
 		}
 	}
 	return 0;
@@ -932,13 +916,8 @@ int log_dhinfo()
 	struct dhcp_status ds;
 
 	dh_file = open(dhmac_fname, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-	if (dh_file < 0) {
-		if (nagios_flag)
-			printf("CRITICAL: Error opening file.");
-		else
-			perror("Error opening file.");
-		exit(2);
-	}
+	if (dh_file < 0)
+		critical("Error opening file: %m");
 
 	memset(&ds, 0, sizeof(ds));
 
@@ -956,13 +935,9 @@ int log_dhinfo()
 	if (ip_listen_flag)
 		ds.listen_pid = getpid();
 
-	if (write(dh_file, &ds, sizeof(ds)) != sizeof(ds)) {
-		if (nagios_flag)
-			printf("CRITICAL: Error writing to file.");
-		else
-			perror("Error writing to file.");
-		exit(2);
-	}
+	if (write(dh_file, &ds, sizeof(ds)) != sizeof(ds))
+		critical("Error writing to file: %m");
+
 	close(dh_file);
 
 	return 0;
@@ -978,11 +953,10 @@ int get_dhinfo()
 	struct dhcp_status ds;
 
 	dh_file = open(dhmac_fname, O_RDONLY);
-
-	if (read(dh_file, &ds, sizeof(ds)) != sizeof(ds))
+	if(dh_file < 0)
 		return ERR_FILE_OPEN;
 
-	if(dh_file < 0)
+	if (read(dh_file, &ds, sizeof(ds)) != sizeof(ds))
 		return ERR_FILE_OPEN;
 
 	memcpy(dhmac, ds.client_mac, sizeof(dhmac));
@@ -1005,4 +979,19 @@ char *get_ip_str(u_int32_t ip)
 	inet_ntop(AF_INET, ((struct sockaddr_in *) &src),
 			ip_str, sizeof(ip_str));
 	return ip_str;
+}
+
+void critical (const char *fmt, ...) {
+	va_list ap;
+
+	va_start(ap, fmt);
+	if (nagios_flag) {
+		printf("CRITICAL: ");
+		vprintf(fmt, ap);
+	}
+	else {
+		vfprintf(stderr, fmt, ap);
+		fprintf(stderr, "\n");
+	}
+	exit(2);
 }
