@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
 				{
 					u_char aux_dhmac[ETHER_ADDR_LEN + 1];
 
-					if(strlen(optarg) != 18
+					if(strlen(optarg) != 17
 							|| sscanf(optarg, ETH_F_FMT, ETH_F_PARG(aux_dhmac)) != 6
 					  )
 					{
