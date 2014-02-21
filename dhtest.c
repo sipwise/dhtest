@@ -376,10 +376,10 @@ int main(int argc, char *argv[])
 		exit(2);
 	}
 
-	dhinfo_ret = get_dhinfo();
-
 	if (!dhmac_fname_flag)
 		sprintf(dhmac_fname, ETH_F_FMT, ETH_F_ARG(dhmac));
+
+	dhinfo_ret = get_dhinfo();
 
 	iface = if_nametoindex(iface_name);
 	if(iface == 0) {
