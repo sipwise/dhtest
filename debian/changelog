@@ -1,3 +1,16 @@
+ngcp-dhtest (1.3.1+0~sipwise2) unstable; urgency=medium
+
+  [ Michael Prokop ]
+  * [d745225] MT#9127 Bump Standards-Version to 3.9.6
+
+  [ Alexander Lutay ]
+  * [23f7a2c] MT#7505 Add .gitreview file for dhtest
+
+  [ Victor Seva ]
+  * build for jessie
+
+ -- Victor Seva <vseva@sipwise.com>  Fri, 06 Nov 2015 15:29:19 +0100
+
 ngcp-dhtest (1.3.1+0~sipwise1) unstable; urgency=low
 
   [ saravana815 ]
