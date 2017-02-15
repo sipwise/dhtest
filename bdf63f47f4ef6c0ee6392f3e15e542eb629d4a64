@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da01753e_99114daf",
+        "filename": "dhtest.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 513,
+      "author": {
+        "id": 1000001
+      },
+      "writtenOn": "2017-02-15T14:25:52Z",
+      "side": 1,
+      "message": "IMHO 3 is enough... it is our DHCP server :-)",
+      "range": {
+        "startLine": 513,
+        "startChar": 15,
+        "endLine": 513,
+        "endChar": 17
+      },
+      "revId": "bdf63f47f4ef6c0ee6392f3e15e542eb629d4a64",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    }
+  ]
+}
