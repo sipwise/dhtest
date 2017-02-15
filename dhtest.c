@@ -510,6 +510,7 @@ request:
 	build_optioneof();
 	build_dhpacket(DHCP_MSGREQUEST); 		/* Builds specified packet */
 	int dhcp_ack_state = 1;
+	int retries = 10;
 	while(dhcp_ack_state != DHCP_ACK_RCVD) { 
 
 		send_packet(DHCP_MSGREQUEST);
@@ -538,13 +539,22 @@ request:
 			if(!nagios_flag && verbose) {
 				print_dhinfo(DHCP_MSGACK);
 			}
-		} else if (dhcp_ack_state == DHCP_NAK_RCVD) {
+			break;
+		}
+
+		if (dhcp_ack_state == DHCP_NAK_RCVD) {
 			if (!nagios_flag && !quiet) {
 				printf("DHCP nack received\t - ");
 				printf("Client MAC : %02x:%02x:%02x:%02x:%02x:%02x\n", \
 					dhmac[0], dhmac[1], dhmac[2], dhmac[3], dhmac[4], dhmac[5]); 
 			}
 		}
+
+		if (--retries <= 0) {
+			printf("Failure - exit\n");
+			exit(2);
+		}
+		sleep(1);
 	}
 	/* If IP listen flag is enabled, Listen on obtained for ARP, ICMP protocols  */
 	if(!nagios_flag && ip_listen_flag) {
