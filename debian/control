@@ -2,13 +2,16 @@ Source: ngcp-dhtest
 Section: admin
 Priority: extra
 Maintainer: Sipwise Development Team <support@sipwise.com>
-Build-Depends: debhelper (>= 9)
-Standards-Version: 3.9.6
-Homepage: http://sipwise.com/
+Build-Depends:
+ debhelper (>= 9),
+Standards-Version: 3.9.8
+Homepage: https://www.sipwise.com/
 
 Package: ngcp-dhtest
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
 Description: DHCP client simulation
  dhtest can simulate multiple DHCP clients behind a network
  device. It can help in testing the DHCP servers or in testing
