@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a1969be_f2ed0df1",
+        "filename": "debian/copyright",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000001
+      },
+      "writtenOn": "2017-04-10T09:15:19Z",
+      "side": 1,
+      "message": "is those changes legal?\nP.S. why 2016 is so special? no commits were done?",
+      "revId": "89060243ffca359267049d6d41ae3461f39b791d",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
+    }
+  ]
+}
