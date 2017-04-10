@@ -16,6 +16,24 @@
       "revId": "89060243ffca359267049d6d41ae3461f39b791d",
       "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a1969be_7482aa53",
+        "filename": "debian/copyright",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2017-04-10T13:44:20Z",
+      "side": 1,
+      "message": "I asked Mika on jabber, and AFAIUI his copyright was supposed to be Sipwise\u0027s (oh he even +2 this so he should be fine with it :), hmm it seems I might have forgotten to ask Richard! Will do so right away.\n\nFrom my git log check there were no relevant Sipwise changes in 2016, no.",
+      "parentUuid": "7a1969be_f2ed0df1",
+      "revId": "89060243ffca359267049d6d41ae3461f39b791d",
+      "serverId": "85315e57-5f03-49c3-83f8-201ae2313a75",
+      "unresolved": false
     }
   ]
 }
