@@ -1,3 +1,14 @@
+ngcp-dhtest (1.3.2+0~sipwise1) unstable; urgency=medium
+
+  [ Richard Fuchs ]
+  * TT#11023 avoid infinite loop and rapid sending of DHCP reqs
+
+  [ Guillem Jover ]
+  * TT#5420 Update packaging
+  * TT#20701 Improve build flags handling
+
+ -- Guillem Jover <gjover@sipwise.com>  Tue, 22 Aug 2017 17:20:27 +0200
+
 ngcp-dhtest (1.3.1+0~sipwise2) unstable; urgency=medium
 
   [ Michael Prokop ]
