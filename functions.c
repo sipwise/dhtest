@@ -316,7 +316,9 @@ int set_rand_dhcp_xid()
  */
 u_int16_t ipchksum(u_int16_t *buff, int words) 
 {
-	unsigned int sum, i;
+	unsigned int sum;
+	int i;
+
 	sum = 0;
 	for(i = 0;i < words; i++){
 		sum = sum + *(buff + i);
@@ -330,8 +332,10 @@ u_int16_t ipchksum(u_int16_t *buff, int words)
  */
 u_int16_t icmpchksum(u_int16_t *buff, int words) 
 {
-	unsigned int sum, i;
+	unsigned int sum;
 	unsigned int last_word = 0;
+	int i;
+
 	/* Checksum enhancement for odd packets */
 	if((icmp_len % 2) == 1) {
 		last_word = *((u_int8_t *)buff + icmp_len + ICMP_H - 1);
@@ -358,7 +362,8 @@ u_int16_t icmpchksum(u_int16_t *buff, int words)
  */
 u_int16_t l4_sum(u_int16_t *buff, int words, u_int16_t *srcaddr, u_int16_t *dstaddr, u_int16_t proto, u_int16_t len) 
 {
-	unsigned int sum, i, last_word = 0;
+	unsigned int sum, last_word = 0;
+	int i;
 
 	/* Checksum enhancement - Support for odd byte packets */
 	if((htons(len) % 2) == 1) {

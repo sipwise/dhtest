@@ -1,7 +1,8 @@
 # Makefile to generate dhtest
 prefix?=$(DESTDIR)/usr
 CC=gcc
-CFLAGS?=-Wall -O3 -g --std=c99 -D_SVID_SOURCE -D_POSIX_SOURCE -D_BSD_SOURCE
+CFLAGS?=-g -O3 -Wall -Wextra
+CFLAGS+=--std=c99 -D_POSIX_SOURCE -D_DEFAULT_SOURCE
 
 %.o: %.c headers.h
 	$(CC) $(CFLAGS) -o $@ -c $<
