@@ -1,3 +1,9 @@
+ngcp-dhtest (1.3.2+0~mr7.0.0.0) unstable; urgency=medium
+
+  * TT#44918 Convert version sring to become an "upstream" repo from mr7.0
+
+ -- Manuel Montecelo <mmontecelo@sipwise.com>  Fri, 05 Oct 2018 12:33:50 +0200
+
 ngcp-dhtest (1.3.2+0~sipwise1) unstable; urgency=medium
 
   [ Richard Fuchs ]
