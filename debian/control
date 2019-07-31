@@ -1,5 +1,5 @@
 Source: ngcp-dhtest
-Section: admin
+Section: net
 Priority: optional
 Maintainer: Sipwise Development Team <support@sipwise.com>
 Build-Depends:
