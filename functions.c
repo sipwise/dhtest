@@ -643,7 +643,7 @@ int build_packet(int pkt_type)
 		u_int32_t ip_addr_tmp;
 		ip_addr_tmp = htonl(ip_address);
 		memcpy(arph->sender_mac, dhmac, ETHER_ADDR_LEN);
-		memcpy(arph->sender_ip, (u_char *)&ip_addr_tmp, ETHER_ADDR_LEN);
+		memcpy(arph->sender_ip, (u_char *)&ip_addr_tmp, IP_ADDR_LEN);
 		memcpy(arph->target_mac, arp_hg->sender_mac, ETHER_ADDR_LEN);
 		memcpy(arph->target_ip, arp_hg->sender_ip, IP_ADDR_LEN);
 	} else if(ICMP_SEND) {
