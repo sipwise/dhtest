@@ -111,8 +111,13 @@ static void cleanup(void) {
 }
 
 static void sigcleanup(int sig) {
+	fprintf(stderr, "signal %s received, exiting\n", strsignal(sig));
+	cleanup();
+}
+
+static void sigabort(int sig) {
 	signal(SIGABRT, SIG_DFL);
-	fprintf(stderr, "signal %i received, aborting\n", sig);
+	fprintf(stderr, "signal %s received, aborting\n", strsignal(sig));
 	cleanup();
 	abort();
 }
@@ -130,8 +135,8 @@ int main(int argc, char *argv[])
 
 	init_rand();
 	atexit(cleanup);
-	signal(SIGSEGV, sigcleanup);
-	signal(SIGABRT, sigcleanup);
+	signal(SIGSEGV, sigabort);
+	signal(SIGABRT, sigabort);
 	signal(SIGTERM, sigcleanup);
 	signal(SIGINT, sigcleanup);
 	signal(SIGHUP, sigcleanup);
