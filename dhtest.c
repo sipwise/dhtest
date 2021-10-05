@@ -113,6 +113,7 @@ static void cleanup(void) {
 static void sigcleanup(int sig) {
 	fprintf(stderr, "signal %s received, exiting\n", strsignal(sig));
 	cleanup();
+	exit(0);
 }
 
 static void sigabort(int sig) {
