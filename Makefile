@@ -1,5 +1,5 @@
 # Makefile to generate dhtest
-prefix?=$(DESTDIR)/usr
+prefix ?= /usr
 CC=gcc
 CFLAGS?=-g -O3 -Wall -Wextra
 CFLAGS+=--std=c99 -D_POSIX_SOURCE -D_DEFAULT_SOURCE
@@ -11,8 +11,8 @@ dhtest: dhtest.o functions.o
 	$(CC) dhtest.o functions.o -o dhtest
 
 install: dhtest
-	install -d $(prefix)/sbin
-	install -m 0755 dhtest $(prefix)/sbin
+	install -d $(DESTDIR)$(prefix)/sbin
+	install -m 0755 dhtest $(DESTDIR)$(prefix)/sbin
 
 clean:
 	rm -f dhtest functions.o dhtest.o
