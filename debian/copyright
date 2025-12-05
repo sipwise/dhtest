@@ -1,12 +1,13 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 
-Files: *
+Files:
+ *
 Copyright:
- Copyright © 2013 Saravanakumar Gandhi <notuenmc@gmail.com>
- Copyright © 2013 Alan T. DeKok <aland@freeradius.org>
- Copyright © 2013 blueardour <blueardour@gmail.com>
- Copyright © 2013 Neuton Martins Costa <notuenmc@gmail.com>
- Copyright © 2013-2015, 2017-2023 Sipwise GmbH, Austria
+ 2013 Saravanakumar Gandhi <notuenmc@gmail.com>
+ 2013 Alan T. DeKok <aland@freeradius.org>
+ 2013 blueardour <blueardour@gmail.com>
+ 2013 Neuton Martins Costa <notuenmc@gmail.com>
+ 2013-2025 Sipwise GmbH, Austria
 License: GPL-2
 
 License: GPL-2
